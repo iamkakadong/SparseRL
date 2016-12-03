@@ -3,24 +3,26 @@ class MDP:
 
     gamma = 0.0
 
-    def reward(s, a):
+    def reward(self, s, a):
         ''' Reward the agent gets by taking action 'a' at state 's' '''
         pass
 
-    def transit(s, a):
+    def transit(self, s, a):
         ''' Transition of state when an agent takes action 'a' at state 's' '''
         pass
 
-    def sample(policy):
+    def sample(self, policy):
         ''' Generate sample according to policy, each sample contains (current_state, next_state, reward) '''
         pass
 
-    def noisy_sample(policy):
+    def noisy_sample(self, policy):
         ''' Generate sample according to policy, then add noisy irrelavent features '''
         pass
 
-    def vf_t(policy):
+    def vf_t(self, policy):
         ''' Return true value function of the given policy '''
         pass
 
+    def __init__(self, gamma):
+        self.gamma = gamma
 
