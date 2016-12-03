@@ -1,7 +1,7 @@
 
 class MDP:
 
-    gamma = 0.0
+    gamma = 0.0 # Discount factor
 
     def reward(self, s, a):
         ''' Reward the agent gets by taking action 'a' at state 's' '''
