@@ -2,6 +2,8 @@
 class MDP:
 
     gamma = 0.0 # Discount factor
+    states = set()
+    cur_state = None
 
     def reward(self, s, a):
         ''' Reward the agent gets by taking action 'a' at state 's' '''
