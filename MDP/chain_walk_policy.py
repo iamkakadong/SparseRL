@@ -9,9 +9,10 @@ class chain_walk_policy(Policy):
 
     def get_action(self, state):
         p_state = self.p_mat[state, :]
-        cum_p = np.cumsum(p_state)
-        rnd = np.random.rand()
-        action = np.argmin(rnd < cum_p) + 1
+        # cum_p = np.cumsum(p_state)
+        # rnd = np.random.rand()
+        # action = (np.argmin(rnd < cum_p)) * 2 - 1
+        action = np.flatnonzero(np.random.multinomial(1, p_state))[0] * 2 - 1
         return action
 
     def set_policy(self, p_mat):

@@ -14,12 +14,21 @@ class chain_walk(MDP):
     rew = list()  # Reward vector for faster computation of reward
 
     def reward(self, s, a):
+        '''
+            Receive +1 reward if the state is the agent is at the first or the last state
+            Receive 0 reward if otherwise
+        '''
         return self.rew[s]
 
     def transit(self, s, a):
+        '''
+            With probability 0.9, the agent transit to the next state consistent with the action
+            With probability 0.1, the agent transit to the next state opposite to the action
+            If the agent is at a boundary state, it remains at the current state if the next state is outside of the state space
+        '''
         rnd = np.random.rand()
         s_next = s + a * ((rnd < 0.9).real * 2 - 1)
-        if s_next > self.length:
+        if s_next >= self.length:
             s_next = self.length - 1
         if s_next < 0:
             s_next = 0
@@ -27,14 +36,20 @@ class chain_walk(MDP):
         return s_next  # NOTE: This may not be necessary
 
     def sample(self, policy):
-        a = policy.get_action(self.cur_state,
-                              self.actions)  # NOTE: policy must have method get_action that returns a value in {-1, 1}
+        '''
+            Returns a sample following the policy starting from the current state.
+            Sample is a tuple:
+                (action, reward, next_state)
+        '''
+        a = policy.get_action(self.cur_state)  # NOTE: policy must have method get_action that returns a value in {-1, 1}
         r = self.reward(self.cur_state, a)
         s_next = self.transit(self.cur_state, a)
-        return (a, r, self.to_feature(s_next))
+        return (a, r, self.to_features(s_next))
 
-    def vf_t(self, policy):
-        ''' compute true value function by solving the system of linear equations defined by the Bellman equation '''
+    def get_vf(self, policy):
+        '''
+            Compute true value function by solving the system of linear equations defined by the Bellman equation
+        '''
         #assert (isinstance(policy, chain_walk_policy))
         p_mat = policy.get_p()  # chain_walk_policy has function get_p which returns a probability matrix p(a|s)
         A = np.zeros([self.length, self.length])
@@ -47,7 +62,7 @@ class chain_walk(MDP):
         vf = np.linalg.solve(np.eye(self.length) - A, b)
         return vf
 
-    def to_feature(self, state):
+    def to_features(self, state):
         f_s = [1, state, state ** 2]
         return f_s
 

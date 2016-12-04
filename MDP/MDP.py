@@ -6,6 +6,7 @@ class MDP:
     states = set() # Not used
     actions = set() # Not used
     cur_state = None
+    noisy_state = None
 
     def reward(self, s, a):
         ''' Reward the agent gets by taking action 'a' at state 's' '''
@@ -24,12 +25,15 @@ class MDP:
         sample = self.sample(policy)
         s_next = sample[2]
         f_irrel = np.random.randn(n_irrel)
-        sample[2] = np.r_[s_next, f_irrel]
+        sample = (sample[0], sample[1], np.r_[s_next, f_irrel])
         return sample
 
-    def vf_t(self, policy):
+    def get_vf(self, policy):
         ''' Return true value function of the given policy '''
         pass
+
+    def get_noisy_state(self, n_irrel):
+        return np.r_[self.to_features(self.cur_state), np.random.randn(n_irrel)]
 
     def to_features(self, state):
         ''' Convert actual state to a feature representation '''
