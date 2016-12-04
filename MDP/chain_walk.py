@@ -1,5 +1,9 @@
 import numpy as np
 
+from MDP import MDP
+from chain_walk_policy import chain_walk_policy
+
+
 class chain_walk(MDP):
     '''
         a = 1: go right
@@ -7,7 +11,7 @@ class chain_walk(MDP):
     '''
 
     length = 0
-    rew = list() # Reward vector for faster computation of reward
+    rew = list()  # Reward vector for faster computation of reward
 
     def reward(self, s, a):
         return self.rew[s]
@@ -20,22 +24,37 @@ class chain_walk(MDP):
         if s_next < 0:
             s_next = 0
         self.set_cur_state(s_next)
-        return s_next   # NOTE: This may not be necessary
+        return s_next  # NOTE: This may not be necessary
 
     def sample(self, policy):
-        a = policy.get_action(self.cur_state) # NOTE: policy must have method get_action that returns a value in {-1, 1}
+        a = policy.get_action(self.cur_state,
+                              self.actions)  # NOTE: policy must have method get_action that returns a value in {-1, 1}
         r = self.reward(self.cur_state, a)
         s_next = self.transit(self.cur_state, a)
-        return (a, r, s_next)
+        return (a, r, self.to_feature(s_next))
 
     def vf_t(self, policy):
-        # TODO: compute true value function
-        return 0
+        ''' compute true value function by solving the system of linear equations defined by the Bellman equation '''
+        #assert (isinstance(policy, chain_walk_policy))
+        p_mat = policy.get_p()  # chain_walk_policy has function get_p which returns a probability matrix p(a|s)
+        A = np.zeros([self.length, self.length])
+        for i in range(self.length):
+            A[i, np.max([i - 1, 0])] = self.gamma * (p_mat[i, 0] * 0.9 + p_mat[i, 1] * 0.1)
+            A[i, np.min([i + 1, self.length - 1])] = self.gamma * (p_mat[i, 0] * 0.1 + p_mat[i, 1] * 0.9)
+        b = np.zeros([self.length, 1])
+        b[0] = 1
+        b[-1] = 1
+        vf = np.linalg.solve(np.eye(self.length) - A, b)
+        return vf
+
+    def to_feature(self, state):
+        f_s = [1, state, state ** 2]
+        return f_s
 
     def __init__(self, gamma, length):
-        MDP.__init__(self, gamma, set(range(length)))
+        MDP.__init__(self, gamma)
+        self.set_actions({-1, 1})
         self.length = length
         self.rew = [0 for i in range(length)]
         self.rew[0] = 1
         self.rew[-1] = 1
-
