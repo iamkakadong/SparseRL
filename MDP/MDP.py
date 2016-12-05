@@ -17,8 +17,15 @@ class MDP:
         pass
 
     def sample(self, policy):
-        ''' Generate sample according to policy, each sample contains (current_state, next_state, reward) '''
-        pass
+        '''
+            Returns a sample following the policy starting from the current state.
+            Sample is a tuple:
+                (action, reward, next_state)
+        '''
+        a = policy.get_action(self.cur_state)  # NOTE: policy must have method get_action that returns a value in the actions space
+        r = self.reward(self.cur_state, a)
+        s_next = self.transit(self.cur_state, a)
+        return (a, r, self.to_features(s_next))
 
     def noisy_sample(self, policy, n_irrel):
         ''' Generate sample according to policy, then add noisy irrelavent features '''

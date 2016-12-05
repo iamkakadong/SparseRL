@@ -35,16 +35,16 @@ class chain_walk(MDP):
         self.set_cur_state(s_next)
         return s_next  # NOTE: This may not be necessary
 
-    def sample(self, policy):
-        '''
-            Returns a sample following the policy starting from the current state.
-            Sample is a tuple:
-                (action, reward, next_state)
-        '''
-        a = policy.get_action(self.cur_state)  # NOTE: policy must have method get_action that returns a value in {-1, 1}
-        r = self.reward(self.cur_state, a)
-        s_next = self.transit(self.cur_state, a)
-        return (a, r, self.to_features(s_next))
+    # def sample(self, policy):
+    #     '''
+    #         Returns a sample following the policy starting from the current state.
+    #         Sample is a tuple:
+    #             (action, reward, next_state)
+    #     '''
+    #     a = policy.get_action(self.cur_state)  # NOTE: policy must have method get_action that returns a value in {-1, 1}
+    #     r = self.reward(self.cur_state, a)
+    #     s_next = self.transit(self.cur_state, a)
+    #     return (a, r, self.to_features(s_next))
 
     def get_vf(self, policy):
         '''
