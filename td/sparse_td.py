@@ -6,6 +6,8 @@ class Sparse_TD:
         self.n = n
         self.k = k
         self.gamma = gamma
+        self.beta = np.zeros(self.k)
+        self.tau = 0
 
     # generaate the feature vector for a sample x
     # e.g phi(x) = [1, x, x^2]
@@ -22,19 +24,28 @@ class Sparse_TD:
     #   tilde_Phi_pirme:  n x k (based on x_2 to x_(n + 1))
     #   tilde_R:          n x k (based on r_2 to r_(n + 1))
     def calculate_base(self, X, R):
-        tilde_Phi = self.phi(X[0 : self.n])
-        tilde_Phi_prime = self.phi(X[1 : self.n + 1])
+       # tilde_Phi = self.phi(X[0 : self.n])
+       # tilde_Phi_prime = self.phi(X[1 : self.n + 1])
+       # tilde_R = R[1 : self.n + 1]
+        tilde_Phi = X[0 : self.n]
+        tilde_Phi_prime = X[1 : self.n + 1]
         tilde_R = R[1 : self.n + 1]
         return tilde_Phi, tilde_Phi_prime, tilde_R
 
     # generate the model parameters tilde_d, tilde_C, tilde_Pi
-    # input: gamma, tilde_Phi, tilde_Phi_prime, tilde_R
+    # generate tilde_A, tilde_d, tilde_G for computing the loss
+    # input: tilde_Phi, tilde_Phi_prime, tilde_R
     # output:
     #   tilde_d:            n x 1
     #   tilde_C:            n x k
     #   tilde_Pi:           n x n
+    #   tilde_A:            k x k
+    #   tilde_b:            k x 1
+    #   tilde_G:            k x k
     def calculate_param(self, tilde_Phi, tilde_Phi_prime, tilde_R):
         tilde_Phi_T = np.transpose(tilde_Phi)
+
+        # for admm algorithm
         tilde_Pi = np.dot(
                       np.dot(
                           tilde_Phi,
@@ -45,7 +56,13 @@ class Sparse_TD:
                       tilde_Phi_T)
         tilde_d = np.dot(tilde_Pi, tilde_R)
         tilde_C = self.gamma * np.dot(tilde_Pi, tilde_Phi_prime) - tilde_Phi
-        return tilde_d, tilde_C, tilde_Pi
+
+        # for computing loss
+        tilde_A = 1.0 / self.n * (np.dot(tilde_Phi_T, tilde_Phi)
+                        - self.gamma * np.dot(tilde_Phi_T, tilde_Phi_prime))
+        tilde_b = 1.0 / self.n * np.dot(tilde_Phi_T, tilde_R)
+        tilde_G = self.n * linalg.pinv(np.dot(tilde_Phi_T, tilde_Phi))
+        return tilde_d, tilde_C, tilde_Pi, tilde_A, tilde_b, tilde_G
 
     ########## proximal gradient descent step in ADMM  ##########
     # f denotes the smooth part
@@ -67,6 +84,11 @@ class Sparse_TD:
                 + tilde_d - alpha - mu * v
             )
 
+    # compute the step size tau
+    def compute_tau(self, tilde_C):
+        eigen_val, _  = linalg.eig(np.dot(np.transpose(tilde_C), tilde_C))
+        self.tau = 1.0 / np.max(eigen_val)
+
     ########## projection part ##########
     # solution for projection problem
     def solve_proj(self, c, epsilon):
@@ -86,30 +108,37 @@ class Sparse_TD:
     #   epsilon:            paramter for projection problem
     # output:
     #   beta:               learned coefficient
-    def sparse_td(self, tilde_C, tilde_d, mu, tau, epsilon):
+    def sparse_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon):
         # initialize parameters
-        beta = np.zeros(self.k)
         v = np.zeros(self.n)
         alpah = np.zeros(self.n)
+        self.compute_tau(tilde_C)
 
         # admm updates
-        for j in range(100):
-            c = tilde_d + np.dot(tilde_C, beta) - mu * v
-            alpha = self.solve_proj(tilde_d + np.dot(tilde_C, beta) - mu * v, epsilon)
-            beta = self.prox(tau * mu, beta - tau * self.grad(tilde_C, tilde_d, beta, alpah, mu, v))
-            v = v - 1 / mu * (tilde_d + np.dot(tilde_C, beta) - alpha)
+        for j in range(1000):
+            c = tilde_d + np.dot(tilde_C, self.beta) - mu * v
+            alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
+            self.beta = self.prox(self.tau * mu, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpah, mu, v))
+            v = v - 1 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
+            print(self.compute_loss(tilde_A, tilde_b, tilde_G))
+            #print(self.beta)
+        return self.beta
 
-        return beta
+    # compute the MSPBE
+    def compute_loss(self, tilde_A, tilde_b, tilde_G):
+        v = np.dot(tilde_A, self.beta) - tilde_b
+        return np.dot(np.dot(np.transpose(v), self.n * tilde_G), v)
 
-    def run(self, mu, tau, epsilon, X, R):
+    def run(self, mu, epsilon, X, R):
         tilde_Phi, tilde_Phi_prime, tilde_R = self.calculate_base(X, R)
-        tilde_d, tilde_C, _ = self.calculate_param(tilde_Phi, tilde_Phi_prime, tilde_R)
-        beta = self.sparse_td(tilde_C, tilde_d, mu, tau, epsilon)
+        tilde_d, tilde_C, _, tilde_A, tilde_b, tilde_G = self.calculate_param(tilde_Phi, tilde_Phi_prime, tilde_R)
+        self.beta = self.sparse_td(tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon)
+        return self.beta
 
 if __name__=='__main__':
     mu = 0.01
     tau = 0.05
-    epsilon = 0
+    epsilon = 0.1
     gamma = 0.9
     n = 2
     k = 3
