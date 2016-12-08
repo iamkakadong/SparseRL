@@ -111,14 +111,14 @@ class Sparse_TD:
     def sparse_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon):
         # initialize parameters
         v = np.zeros(self.n)
-        alpah = np.zeros(self.n)
+        alpha = np.zeros(self.n)
         self.compute_tau(tilde_C)
 
         # admm updates
         for j in range(1000):
             c = tilde_d + np.dot(tilde_C, self.beta) - mu * v
             alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
-            self.beta = self.prox(self.tau * mu, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpah, mu, v))
+            self.beta = self.prox(self.tau * mu, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, v))
             v = v - 1 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
             print(self.compute_loss(tilde_A, tilde_b, tilde_G))
             #print(self.beta)
