@@ -123,7 +123,6 @@ class Elastic_TD:
             self.beta = self.prox(self.tau * mu * delta, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
             v = v - 1 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
             print(self.compute_loss(tilde_A, tilde_b, tilde_G))
-            #print(self.beta)
         return self.beta
 
     # compute the MSPBE
