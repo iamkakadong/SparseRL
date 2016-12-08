@@ -62,6 +62,33 @@ class chain_walk(MDP):
         vf = np.linalg.solve(np.eye(self.length) - A, b)
         return vf
 
+    def get_stationary(self, policy):
+        p = np.zeros([self.length, self.length])
+        p_mat = policy.get_p()
+        for i in range(20):
+            p[i, max(i - 1, 0)] = 0.9 * p_mat[i, 0] + 0.1 * p_mat[i, 1]
+            p[i, min(i + 1, 19)] = 0.1 * p_mat[i, 0] + 0.9 * p_mat[i, 1]
+        p = p.T - np.eye(self.length)
+        p[-1,:] = 1
+        b = [0 for i in range(20)]
+        b[-1] = 1
+        s_dist = np.linalg.solve(p, b)
+        if any(s_dist < 0):
+            print 'Error! Stationary distribution has negative component'
+            return None
+        return s_dist
+        # w, v = np.linalg.eig(p.T)
+        # idx = np.where(w == 1)[0]
+        # if len(idx) != 0:
+        #     print 'Eigenvalue error! No eigenvalue = 1'
+        #     return None
+        # else:
+        #     if any(v[:, idx] < 0):
+        #         print 'Error! Stationary distribution has negative components'
+        #         return None
+        #     s_dist = v[:, idx] / np.sum(v[:, idx])
+        #     return s_dist
+
     def to_features(self, state):
         f_s = [1, state, state ** 2]
         return f_s
