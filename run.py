@@ -14,9 +14,9 @@ if __name__ == '__main__':
     policy = chain_walk_policy.chain_walk_policy(length)
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if      state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2])# + 0.5
-    p_mat[0:10, 0] = 1
-    p_mat[10::, 1] = 1
+    p_mat = np.zeros([20, 2]) + 0.5
+   # p_mat[0:10, 0] = 1
+   # p_mat[10::, 1] = 1
     policy.set_policy(p_mat)
 
     # Get true value function for the policy
@@ -44,9 +44,9 @@ if __name__ == '__main__':
     # epsilon:  parameter for equility constraint
     # delta:    paramter for l1-norm and l2-norm
     # epoch:    number of epoch in ADMM
-    mu = 10
-    epsilon = 0.01
-    delta = 0
+    mu = 100
+    epsilon = 0.1
+    delta = 1
     epoch = 500
 
     # running Elastic_TD
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     beta = alg.run(mu, epsilon, delta, epoch, np.array(state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
-    #print(beta)
+    print(beta)
 
     # generate feature vectors for all states
     x = np.arange(length)
