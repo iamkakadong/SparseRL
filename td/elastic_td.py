@@ -88,7 +88,7 @@ class Elastic_TD:
     def compute_tau(self, tilde_C, mu, delta):
         eigen_val, _  = linalg.eig(np.dot(np.transpose(tilde_C), tilde_C)
                         + mu * (1 - delta) * np.identity(self.k))
-        self.tau = 0.1 / np.max(eigen_val)
+        self.tau = 0.99 / np.max(eigen_val)
 
     ########## projection part ##########
     # solution for projection problem
