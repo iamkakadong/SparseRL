@@ -14,9 +14,9 @@ if __name__ == '__main__':
     policy = chain_walk_policy.chain_walk_policy(length)
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if      state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2]) + 0.5
-    #p_mat[0:10, 0] = 1
-    #p_mat[10::, 1] = 1
+    p_mat = np.zeros([20, 2])# + 0.5
+    p_mat[0:10, 0] = 1
+    p_mat[10::, 1] = 1
     policy.set_policy(p_mat)
 
     # Get true value function for the policy
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from     the environment
     n_noisy = 100
-    n_samples = 400
+    n_samples = 500
     state_seq = list()
     action_seq = list()
     reward_seq = list()
@@ -39,15 +39,36 @@ if __name__ == '__main__':
         reward_seq.append(sample[1])
         state_seq.append(sample[2])
 
+    # parameters for Elastic_TD
+    # mu:       parameter for augmented Lagrangian
+    # epsilon:  parameter for equility constraint
+    # delta:    paramter for l1-norm and l2-norm
+    # epoch:    number of epoch in ADMM
     mu = 10
     epsilon = 0.01
-    delta = 1
+    delta = 0
     epoch = 500
+
+    # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples - 1, n_noisy + 3, gamma)
     beta = alg.run(mu, epsilon, delta, epoch, np.array(state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
+    #print(beta)
 
+    # generate feature vectors for all states
+    x = np.arange(length)
+    phi_x = np.c_[np.ones(length), x, x ** 2]
 
-    print(alg.tau)
-    print(beta)
+    # calculate the aproximated value function
+    beta_x = beta[0:3]
+    V_x = np.dot(phi_x, beta_x)
+
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
+
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss = np.dot(np.dot(v.T, D), v)
+
+    print(loss)
