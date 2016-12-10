@@ -36,6 +36,22 @@ class MDP:
         sample = (sample[0], sample[1], np.r_[s_next, f_irrel])
         return sample
 
+    def noisy_sample_binary(self, policy, n_irrel, sparsity):
+        ''' Generate sample according to policy, then add binary noise with probability being one defined by sparsity '''
+        sample = self.sample(policy)
+        s_next = sample[2]
+        f_irrel = (np.random.rand(n_irrel) < sparsity).astype(float)
+        sample = (sample[0], sample[1], np.r_[s_next, f_irrel])
+        return sample
+
+    def noisy_sample_full(self, policy, n_gauss, n_bin, sparsity):
+        sample = self.sample(policy)
+        s_next = sample[2]
+        f_gauss = np.random.randn(n_irrel)
+        f_bin = (np.random.rand(n_bin) < sparsity).astype(float)
+        sample = (sample[0], sample[1], np.r_[s_next, f_gauss, f_bin])
+        return sample
+
     def get_vf(self, policy):
         ''' Return true value function of the given policy '''
         pass
