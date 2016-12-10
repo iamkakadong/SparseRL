@@ -1,6 +1,6 @@
 import numpy as np
-from chain_walk import chain_walk
-from chain_walk_policy import chain_walk_policy
+from pendulum import pendulum
+from pendulum_policy import pendulum_policy
 
 if __name__ == '__main__':
 
@@ -19,6 +19,7 @@ if __name__ == '__main__':
     env = pendulum(dim, length, mass, sigma, dt, gamma, penalty, action_penalty)
     policy = pendulum_policy(dim * 2, dim, policy_noise)
 
+    # Compute optimal policy via dynamic programming
     theta_p, _, _ = env.get_opt_policy()
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     vf = env.get_vf(policy)
 
     # Set current state of environment to 0
-    env.set_cur_state(9)
+    env.reset_state()
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
     n_noisy = 20
