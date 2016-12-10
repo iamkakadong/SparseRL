@@ -22,22 +22,28 @@ if __name__ == '__main__':
     # Get true value function for the policy
     vf = env.get_vf(policy)
 
-    # Set current state of environment to 0
-    env.set_cur_state(10)
-
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from     the environment
-    n_noisy = 100
+    n_noisy = 0
     n_samples = 1000
-    state_seq = list()
-    action_seq = list()
-    reward_seq = list()
-    state_seq.append(env.get_noisy_state(n_noisy))
+    n_iter = 500 #n_samples / length
+    state_seq = []
+    next_state_seq = []
+    action_seq = []
+    reward_seq = []
     for i in range(n_samples):
-        # Each sample is a tuple (action, reward, next state)
+        # set to a new state every 50 iterations
+        if i % n_iter == 0:
+            env.set_cur_state(9 + i / n_iter)
+            print(i / n_iter)
+            state_seq.append(env.get_noisy_state(n_noisy))
+        else:
+            state_seq.append(sample[2])
+
+       # Each sample is a tuple (action, reward, next state)
         sample = env.noisy_sample(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
-        state_seq.append(sample[2])
+        next_state_seq.append(sample[2])
 
     # parameters for Elastic_TD
     # mu:       parameter for augmented Lagrangian
@@ -51,7 +57,7 @@ if __name__ == '__main__':
 
     # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
     print(beta)
