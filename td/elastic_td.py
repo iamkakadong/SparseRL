@@ -29,7 +29,7 @@ class Elastic_TD:
        # tilde_R = R[1 : self.n + 1]
         tilde_Phi = X[0 : self.n]
         tilde_Phi_prime = X[1 : self.n + 1]
-        tilde_R = R[1 : self.n + 1]
+        tilde_R = R[0 : self.n + 1]
         return tilde_Phi, tilde_Phi_prime, tilde_R
 
     # generate the model parameters tilde_d, tilde_C, tilde_Pi
