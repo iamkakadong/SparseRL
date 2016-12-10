@@ -11,7 +11,7 @@ class pendulum_policy(Policy):
 
     def get_action(self, state):
         m = np.array(np.dot(self.theta, state)).flatten()
-        noise = np.sqrt(self.noise[None, :]) * np.random.randn(self.dim_A)
+        noise = np.sqrt((np.ones((self.dim_A)) * self.noise)[None, :]) * np.random.randn(self.dim_A)
         return (m + noise).flatten()
 
     def set_policy(self, theta, noise):

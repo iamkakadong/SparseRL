@@ -21,7 +21,7 @@ class pendulum(MDP):
     cur_state = None # A 2 * dim vector; First half are angles of the joints, second half are angular velocities of the joints
 
     def reward(self, s, a):
-        return - np.norm(s[:self.dim]) ** 2
+        return - np.linalg.norm(s[:self.dim]) ** 2
 
     def transit(self, s, a):
         z = np.random.randn(self.dim * 2) * self.sigma
@@ -42,7 +42,7 @@ class pendulum(MDP):
         gamma = self.gamma
         for i in xrange(n_iter):
             theta_n = - gamma * np.linalg.pinv(R + gamma * B.T * P * B) * B.T * P * A
-            P_n, b_n = self.bellman_operator(P, b, theta)
+            P_n, b_n = self.bellman_operator(P, b, theta, gamma)
             if np.linalg.norm(P - P_n) < eps and np.abs(b - b_n) < eps and np.linalg.norm(theta - theta_n) < eps:
                 print "Converged estimating V after ", i, "iterations"
                 break
@@ -51,14 +51,16 @@ class pendulum(MDP):
             theta = theta_n
         return np.asarray(theta), P, b
 
-    def bellman_operator(self, P, b, theta, noise=0.0):
+    def bellman_operator(self, P, b, theta, gamma, noise=0.0):
         # From Christoph Dann's code on Github: tdlearn -> dynamic_prog.py -> solve_LQR
         ''' Bellman operator for the behavioral policy defined with P, b, and theta '''
 
-        Sigma = np.matrix(np.diag(self.sigma))
+        Sigma = np.matrix(np.diag(np.ones(self.dim * 2) * self.sigma))
         theta = np.matrix(theta)
-        if noise == 0:
+        if noise == 0.:
             noise = np.zeros((theta.shape[0]))
+        else:
+            noise = np.zeros((theta.shape[0])) + noise
         S = self.A + self.B * theta
         C = self.Q + theta.T * self.R * theta
 
@@ -74,7 +76,7 @@ class pendulum(MDP):
             V = s^T P s
         '''
 
-        T = lambda x, y: self.bellman_operator(x, y, policy.theta, policy.noise)
+        T = lambda x, y: self.bellman_operator(x, y, policy.theta, self.gamma, policy.noise)
         P = np.matrix(np.zeros([policy.dim_S, policy.dim_S]))
         b = 0.
         for i in xrange(n_iter):
@@ -100,13 +102,13 @@ class pendulum(MDP):
         self.sigma = sigma
         self.dt = dt
 
-        A = np.diag(2 * dim)
+        A = np.eye(2 * dim)
         A[:dim, dim:] += dt * np.eye(dim)
-        ms = range(1, dim + 1)[::-1] * m
-        self.M = l ** 2 * np.minimum(ms[:, None], m)
+        ms = np.array(range(1, dim + 1)[::-1]) * m
+        self.M = l ** 2 * np.minimum(ms[:, None], ms)
         Minv = np.linalg.pinv(self.M)
-        self.U = - np.diag(self.g * l * ms)
-        A[dim:, :dim] -= dt * Minv * self.U
+        Upp = - self.g * self.l * ms
+        A[dim:, :dim] -= dt * Minv * Upp[None, :]
         self.A = A
 
         B = np.zeros([2 * dim, dim])
@@ -119,4 +121,5 @@ class pendulum(MDP):
         Q[:dim, :dim] += np.eye(dim) * penalty
         self.Q = Q
 
-        self.cur_state = zeros(2 * dim)
+        self.cur_state = np.zeros(2 * dim)
+        self.DEFAULT_STATE = self.cur_state

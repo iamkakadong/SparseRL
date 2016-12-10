@@ -7,6 +7,7 @@ class MDP:
     actions = set() # Not used
     cur_state = None
     noisy_state = None
+    DEFAULT_STATE = None
 
     def reward(self, s, a):
         ''' Reward the agent gets by taking action 'a' at state 's' '''
@@ -54,6 +55,9 @@ class MDP:
 
     def get_actions(self):
         return self.actions
+
+    def reset_state(self):
+        self.set_cur_state(self.DEFAULT_STATE)
 
     def __init__(self, gamma):
         self.gamma = gamma

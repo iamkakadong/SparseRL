@@ -100,3 +100,4 @@ class chain_walk(MDP):
         self.rew = [0 for i in range(length)]
         self.rew[0] = 1
         self.rew[-1] = 1
+        self.DEFAULT_STATE = 10
