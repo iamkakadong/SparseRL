@@ -2,7 +2,8 @@ import MDP.MDP
 from MDP.chain_walk import *
 import MDP.Policy
 import numpy as np
-from td.Elastic_TD import *
+import td.Elastic as Elastic
+import td.elastic_td as elastic_td
 
 if __name__ == "__main__":
     gamma = 0.9
@@ -31,7 +32,7 @@ if __name__ == "__main__":
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
     n_noisy = 20
-    n_samples = 10
+    n_samples = 1000
     state_seq = list()
     action_seq = list()
     reward_seq = list()
@@ -43,7 +44,13 @@ if __name__ == "__main__":
         reward_seq.append(sample[1])
         state_seq.append(sample[2])
 
-    solver = Elastic_TD(gamma, mu, alpha, epsilon, state_seq, reward_seq)
+    solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, state_seq, reward_seq)
     solver.ADMM()
     print solver.theta
-    print solver.objs
+    #print solver.objs
+
+    alg = elastic_td.Elastic_TD(n_samples-1, n_noisy + 3, gamma)
+    beta = alg.run(mu, epsilon, alpha, 100, np.array(state_seq), np.array(reward_seq))
+    #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
+    #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
+    print(beta)

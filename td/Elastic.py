@@ -47,20 +47,27 @@ class Elastic_TD:
         self.mu = mu
         self.alpha = alpha
         self.eplison = eplison
-        self.Phi = np.array(states[0:-1])
-        self.Phi_ = np.array(states[1:])
-        self.n = self.Phi.shape[0]
-        self.k = self.Phi.shape[1]
-        self.R = np.array(rewards)
-        self.PI = np.dot(self.Phi.dot(np.linalg.pinv(np.dot(self.Phi.T, self.Phi))), self.Phi.T)
+        self.n = len(rewards) - 1
+        self.k = len(states[0])
+        self.Phi = np.array(states[: self.n])
+        self.Phi_ = np.array(states[1: self.n+1])
+        self.R = np.array(rewards[1: self.n+1])
+        self.PI = np.dot(
+                      np.dot(
+                          self.Phi,
+                          np.linalg.pinv(
+                              np.dot(self.Phi.T, self.Phi)
+                          )
+                      ),
+                      self.Phi.T)
         self.A = (1.0 / self.n) * self.Phi.T.dot(self.Phi - self.gamma * self.Phi_)
         self.M = self.n * np.linalg.pinv(np.dot(self.Phi.T, self.Phi))
         self.b = (1.0 / self.n) * self.Phi.T.dot(self.R)
-        self.C = self.gamma * self.PI.dot(self.Phi_) - self.Phi
-        self.d = self.PI.dot(self.R)
+        self.C = self.gamma * np.dot(self.PI, self.Phi_) - self.Phi
+        self.d = np.dot(self.PI, self.R)
 
         w, v = np.linalg.eig(self.C.T.dot(self.C) + 2*self.mu*(1-self.alpha)*np.eye(self.k))
-        self.t = 1.0 / np.max(w)
+        self.t = 0.99 / np.max(w)
 
         '''objs'''
         self.objs = []
@@ -71,7 +78,7 @@ class Elastic_TD:
         self.z = np.zeros(self.n)
 
     def admm_stop(self, itr):
-        return itr > 200
+        return itr >= 100
 
     def soft_thd(self, vec, thred):
         return np.maximum(np.minimum(vec+thred, 0), vec-thred)
@@ -85,22 +92,18 @@ class Elastic_TD:
         i = 0
         while not self.admm_stop(i):
             # update beta
-            self.beta = np.dot(self.C, self.theta) + self.d - (self.mu * self.z)
+            self.beta = np.dot(self.C, self.theta) + self.d - self.mu * self.z
             beta_norm = np.linalg.norm(self.beta)
             if beta_norm > self.eplison:
                 self.beta = self.beta * (self.eplison / beta_norm)
 
             # update theta
-            grad = np.dot(self.C.T, self.C.dot(self.theta) + self.d - self.beta - self.mu * self.z) + 2*self.mu*(1-self.alpha) * self.theta
-            print self.t
+            grad = np.dot(self.C.T, np.dot(self.C, self.theta)+self.d-self.beta-self.mu*self.z) + 2*self.mu*(1-self.alpha) * self.theta
             self.theta = self.soft_thd(self.theta - self.t*grad, self.mu * self.alpha * self.t)
 
             # update z 
-            print self.theta
-            print self.C.dot(self.theta)
-            print (1.0 / self.mu) * (self.C.dot(self.theta) + self.d - self.beta)
-            self.z -= (1.0 / self.mu) * (self.C.dot(self.theta) + self.d - self.beta)
-
+            self.z -= 1.0 / self.mu * (np.dot(self.C, self.theta) + self.d - self.beta)
+            
             # calculate objective
             self.objs.append(self.cal_obj())
             i += 1
