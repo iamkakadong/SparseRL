@@ -19,9 +19,9 @@ if __name__ == "__main__":
     policy = chain_walk_policy(length)
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2])
-    p_mat[0:10, 0] = 1
-    p_mat[10::, 1] = 1
+    p_mat = np.zeros([20, 2]) + 0.5
+    #p_mat[0:10, 0] = 1
+    #p_mat[10::, 1] = 1
     policy.set_policy(p_mat)
 
     # Get true value function for the policy
