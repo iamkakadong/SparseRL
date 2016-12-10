@@ -43,15 +43,15 @@ if __name__ == '__main__':
     # mu:       parameter for augmented Lagrangian
     # epsilon:  parameter for equility constraint
     # delta:    paramter for l1-norm and l2-norm
-    # epoch:    number of epoch in ADMM
-    mu = 100
-    epsilon = 0.1
+    # stop_ep:  parameter for stopping criteria (ADMM)
+    mu = 1
+    epsilon = 0.01
     delta = 1
-    epoch = 500
+    stop_ep = 0.01
 
     # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples - 1, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, delta, epoch, np.array(state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
     print(beta)

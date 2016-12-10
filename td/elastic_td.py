@@ -87,7 +87,7 @@ class Elastic_TD:
     # compute the step size tau
     def compute_tau(self, tilde_C, mu, delta):
         eigen_val, _  = linalg.eig(np.dot(np.transpose(tilde_C), tilde_C)
-                        + mu * (1 - delta) * np.identity(self.k))
+                + 2 * mu * (1 - delta) * np.identity(self.k))
         self.tau = 0.99 / np.max(eigen_val)
 
     ########## projection part ##########
@@ -110,30 +110,44 @@ class Elastic_TD:
     #   delta:              parameter for the l1-norm and l2-norm
     # output:
     #   beta:               learned coefficient
-    def elastic_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, epoch):
+    def elastic_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep):
         # initialize parameters
         v = np.zeros(self.n)
         alpha = np.zeros(self.n)
+        prev_alpha = np.ones(self.n)
         self.compute_tau(tilde_C, mu, delta)
 
         # admm updates
-        for j in range(epoch):
+        #for j in range(epoch):
+        count = 0
+        primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, alpha, self.beta, mu)
+        while linalg.norm(primal_residual) > stop_ep or linalg.norm(dual_residual) > stop_ep:
+            count += 1
+            prev_alpha = alpha
             c = tilde_d + np.dot(tilde_C, self.beta) - mu * v
             alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
             self.beta = self.prox(self.tau * mu * delta, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
             v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
+            primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha, self.beta, mu)
             print(self.compute_loss(tilde_A, tilde_b, tilde_G))
+        print(count)
         return self.beta
+
+    # compute the residual
+    def compute_residual(self, tilde_C, tilde_d, alpha, prev_alpha, beta, mu):
+        primal_residual = np.dot(tilde_C, beta) + tilde_d - alpha
+        dual_residual = - 1.0 / mu * np.dot(tilde_C.T, alpha - prev_alpha)
+        return primal_residual, dual_residual
 
     # compute the MSPBE
     def compute_loss(self, tilde_A, tilde_b, tilde_G):
         v = np.dot(tilde_A, self.beta) - tilde_b
         return np.dot(np.dot(np.transpose(v), self.n * tilde_G), v)
 
-    def run(self, mu, epsilon, delta, epoch, X, R):
+    def run(self, mu, epsilon, delta, stop_ep, X, R):
         tilde_Phi, tilde_Phi_prime, tilde_R = self.calculate_base(X, R)
         tilde_d, tilde_C, _, tilde_A, tilde_b, tilde_G = self.calculate_param(tilde_Phi, tilde_Phi_prime, tilde_R)
-        self.beta = self.elastic_td(tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, epoch)
+        self.beta = self.elastic_td(tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep)
         return self.beta
 
 if __name__=='__main__':
