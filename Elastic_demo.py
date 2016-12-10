@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     #set parameters for solver
     epsilon = 0.01
-    mu = 10
+    mu = 1
     alpha = 1
 
     # Define environment and policy
@@ -47,10 +47,38 @@ if __name__ == "__main__":
     solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, state_seq, reward_seq)
     solver.ADMM()
     print solver.theta
-    #print solver.objs
+    print solver.objs[-1]
+
+    # generate feature vectors for all states
+    x = np.arange(length)
+    phi_x = np.c_[np.ones(length), x, x ** 2]
+
+    # calculate the aproximated value function
+    beta_x = solver.theta[0:3]
+    V_x = np.dot(phi_x, beta_x)
+
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
+
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss = np.dot(np.dot(v.T, D), v)
+
+    print(loss)
 
     alg = elastic_td.Elastic_TD(n_samples-1, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, alpha, 100, np.array(state_seq), np.array(reward_seq))
-    #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
-    #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, alpha, 0.01, np.array(state_seq), np.array(reward_seq))
     print(beta)
+
+    # calculate the aproximated value function
+    beta_x = beta[0:3]
+    V_x = np.dot(phi_x, beta_x)
+
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
+
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss = np.dot(np.dot(v.T, D), v)
+
+    print(loss)
