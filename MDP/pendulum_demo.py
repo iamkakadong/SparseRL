@@ -4,18 +4,25 @@ from chain_walk_policy import chain_walk_policy
 
 if __name__ == '__main__':
 
-    gamma = 0.9
-    length = 20
+    gamma = 0.95
+    dim = 20
+    length = 1
+    mass = 1
+    sigma = 0.01
+    dt = 0.01
+    penalty=0.01
+    action_penalty=0.0
+
+    policy_noise = 0.1
 
     # Define environment and policy
-    env = chain_walk(gamma, length)
-    policy = chain_walk_policy(length)
+    env = pendulum(dim, length, mass, sigma, dt, gamma, penalty, action_penalty)
+    policy = pendulum_policy(dim * 2, dim, policy_noise)
+
+    theta_p, _, _ = env.get_opt_policy()
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2]) + 0.5
-    # p_mat[0:10, 0] = 1
-    # p_mat[10::, 1] = 1
-    policy.set_policy(p_mat)
+    policy.set_policy(theta_p, policy_noise)
 
     # Get true value function for the policy
     vf = env.get_vf(policy)
