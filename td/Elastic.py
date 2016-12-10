@@ -22,7 +22,8 @@ class Elastic_TD:
         d: minimizatino problem in ||C * theta + d||_2, d = PI * R, n dim vector
 
         theta: what we ultimately want to know to compute (V_theta = Phi(s) * theta), k dim vector
-        beta: auxiliary variable in ADMM, n
+        beta: auxiliary variable in ADMM, n dim vetor
+        prev_beta: last beta, used for stopping criteria
         z: lagrange multiplier for (C*theta + b - beta)     
     '''
     def map_features(self, states):
@@ -75,10 +76,13 @@ class Elastic_TD:
         ''' Initialize variables '''
         self.theta = np.zeros(self.k)
         self.beta = np.zeros(self.n)
+        self.prev_beta = np.zeros(self.n)
         self.z = np.zeros(self.n)
 
-    def admm_stop(self, itr):
-        return itr >= 100
+    def admm_stop(self, itr, ep_prm, ep_dual):
+        res_prm = np.linalg.norm( np.dot(self.C, self.theta) + self.d - self.beta )
+        res_dual = np.linalg.norm( (1.0/self.mu) * self.C.T.dot((-1)*np.eye(self.n)).dot(self.beta - self.prev_beta) )
+        return res_prm <= ep_prm and res_dual <= ep_dual
 
     def soft_thd(self, vec, thred):
         return np.maximum(np.minimum(vec+thred, 0), vec-thred)
@@ -90,8 +94,9 @@ class Elastic_TD:
     def ADMM(self):
         '''run admm solver'''
         i = 0
-        while not self.admm_stop(i):
+        while not self.admm_stop(i, 1e-3, 1e-3):
             # update beta
+            self.prev_beta = np.copy(self.beta)
             self.beta = np.dot(self.C, self.theta) + self.d - self.mu * self.z
             beta_norm = np.linalg.norm(self.beta)
             if beta_norm > self.eplison:
@@ -103,7 +108,7 @@ class Elastic_TD:
 
             # update z 
             self.z -= 1.0 / self.mu * (np.dot(self.C, self.theta) + self.d - self.beta)
-            
+
             # calculate objective
             self.objs.append(self.cal_obj())
             i += 1
