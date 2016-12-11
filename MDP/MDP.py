@@ -44,6 +44,13 @@ class MDP:
         sample = (sample[0], sample[1], np.r_[s_next, f_irrel])
         return sample
 
+    def noisy_sample_corr(self, policy, n_irrel):
+        sample = self.sample(policy)
+        s_next = sample[2]
+        f_irrel = s_next[:n_irrel] + np.random.randn(n_irrel)
+        sample = (sample[0], sample[1], np.r_[s_next, f_irrel])
+        return sample
+
     def noisy_sample_full(self, policy, n_gauss, n_bin, sparsity):
         sample = self.sample(policy)
         s_next = sample[2]
