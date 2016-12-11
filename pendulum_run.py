@@ -2,6 +2,7 @@ import numpy as np
 from MDP.pendulum import pendulum
 from MDP.pendulum_policy import pendulum_policy
 import td.fast_elastic_td as elastic_td
+import td.Elastic_fast as Elastic_fast
 
 if __name__ == '__main__':
 
@@ -55,6 +56,11 @@ if __name__ == '__main__':
     delta = 1
     stop_ep = 0.01
     eta = 0.9
+
+    solver = Elastic_fast.Elastic_TD(gamma, mu, delta, eta, epsilon,np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    solver.ADMM()
+    print solver.theta
+    print solver.objs[-1]
 
     # run elastic_td
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 2 * dim + 1, gamma)
