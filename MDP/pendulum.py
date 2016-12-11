@@ -110,7 +110,7 @@ class pendulum(MDP):
                 pred.append(np.inner(theta[0:self.dim * 2 + 1], self.to_features(s)))
                 self.transit(s, policy.get_action(s))
         mse = np.mean(map(lambda x, y: np.linalg.norm(x - y) ** 2, truth, pred))
-        return mse
+        return mse, truth, pred
 
     def to_features(self, state):
         return np.r_[np.array(state) ** 2, 1]

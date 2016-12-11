@@ -2,6 +2,7 @@ import numpy as np
 from MDP.pendulum import pendulum
 from MDP.pendulum_policy import pendulum_policy
 import td.fast_elastic_td as elastic_td
+import td.Elastic_fast as Elastic_fast
 
 if __name__ == '__main__':
 
@@ -49,15 +50,11 @@ if __name__ == '__main__':
         next_state_seq.append(sample[2])
         state = sample[2]
 
-    # set parameters
-    mu = 1
-    epsilon = 0.01
-    delta = 1
-    stop_ep = 0.01
-    eta = 0.9
-
     # run elastic_td
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 2 * dim + 1, gamma)
     beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
     print(beta)
 
+    # compute MSE
+    loss = env.compute_mse(policy, beta)
+    print loss
