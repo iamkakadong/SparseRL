@@ -12,7 +12,7 @@ class Elastic_TD:
         k: number of features
         Phi: current states of trajectory samples, n * k dimension matrix
         Phi_: next states of trajectory samples, n * k dimension matrix
-        PI: feature space projector, Phi(Phi.T * Phi)^(-1) * Phi.T,
+        PI: feature space projector, Phi(Phi.T * Phi)^(-1) * Phi.T, 
             the inverse is computed as pseudo-inverse when singular, n * n matrix
         R: trajectory reward, n dim vector
         A: minimization problem in ||A * theta - b||_nM^2, A = (1/n) * Phi.T * (Phi - gamma * Phi_), k * k matrix
@@ -68,7 +68,6 @@ class Elastic_TD:
         self.b = (1.0 / self.n) * self.Phi.T.dot(self.R)
         self.C = self.gamma * np.dot(self.PI, self.Phi_) - self.Phi
         self.d = np.dot(self.PI, self.R)
-        print self.d[:10]
 
         w, v = np.linalg.eig(self.C.T.dot(self.C) + 2*self.mu*(1-self.alpha)*np.eye(self.k))
         self.t = 0.99 / np.max(w)
@@ -126,12 +125,12 @@ class Elastic_TD:
             grad = np.dot(self.C.T, np.dot(self.C, self.theta)+self.d-self.beta_hat-self.mu*self.z_hat) + 2*self.mu*(1-self.alpha) * self.theta
             self.theta = self.soft_thd(self.theta - self.t*grad, self.mu * self.alpha * self.t)
 
-            # update z
+            # update z 
             self.z = self.z_hat - 1.0 / self.mu * (np.dot(self.C, self.theta) + self.d - self.beta)
 
             # measures error
             self.c = self.mu * (np.linalg.norm(self.z - self.z_hat) ** 2) + (1.0/self.mu) * (np.linalg.norm(self.beta - self.beta_hat)**2)
-
+            
             # admm with reset
             if self.c < self.eta * self.prev_c:
                 alpha = 0.5 * (1 + np.sqrt(1 + 4*prev_alpha*prev_alpha))
@@ -145,10 +144,10 @@ class Elastic_TD:
 
             # calculate objective
             self.objs.append(self.cal_obj())
-            #print self.objs[-1]
+            # print self.objs[-1]
             i += 1
             if i % 1000 == 0:
-                print 'Iteration: ', i
+                print 'Iteration: ', i, self.objs[-1]
 
     def proximal_GD(self):
         pass
