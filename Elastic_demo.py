@@ -4,6 +4,7 @@ import MDP.Policy
 import numpy as np
 import td.Elastic as Elastic
 import td.elastic_td as elastic_td
+import td.Elastic_fast as Elastic_fast
 
 if __name__ == "__main__":
     gamma = 0.9
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     epsilon = 0.01
     mu = 1
     alpha = 1
+    eta = 0.9
 
     # Define environment and policy
     env = chain_walk(gamma, length)
@@ -27,24 +29,58 @@ if __name__ == "__main__":
     # Get true value function for the policy
     vf = env.get_vf(policy)
 
-    # Set current state of environment to 0
-    env.set_cur_state(9)
+    # Generate sequence of noisy samples for each state
+    states = []
+    next_states = []
+    actions = []
+    rewards = []
 
-    # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
     n_noisy = 20
     n_samples = 1000
-    state_seq = list()
-    action_seq = list()
-    reward_seq = list()
-    state_seq.append(env.get_noisy_state(n_noisy))
-    for i in range(n_samples):
-        # Each sample is a tuple (action, reward, next state)
-        sample = env.noisy_sample(policy, n_noisy)
-        action_seq.append(sample[0])
-        reward_seq.append(sample[1])
-        state_seq.append(sample[2])
+    for i in [9,10]:
+        # set current state
+        env.set_cur_state(i)
+        state_seq = []
+        action_seq = []
+        reward_seq = []
+        state_seq.append(env.get_noisy_state(n_noisy))
 
-    solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, state_seq, reward_seq)
+        #get trajectory samples
+        for j in range(n_samples):
+            sample = env.noisy_sample(policy, n_noisy)
+            action_seq.append(sample[0])
+            reward_seq.append(sample[1])
+            state_seq.append(sample[2])
+
+        # Add trajectory to the list
+        states += state_seq[:-1]
+        next_states += state_seq[1:]
+        actions += action_seq
+        rewards += reward_seq
+
+    # solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, states, next_states, rewards)
+    # solver.ADMM()
+    # print solver.theta
+    # print solver.objs[-1]
+
+    # # generate feature vectors for all states
+    # x = np.arange(length)
+    # phi_x = np.c_[np.ones(length), x, x ** 2]
+
+    # # calculate the aproximated value function
+    # beta_x = solver.theta[0:3]
+    # V_x = np.dot(phi_x, beta_x)
+
+    # # generate the stationary distribution
+    # D = np.diag(env.get_stationary(policy))
+
+    # # calculate the MSE
+    # v = V_x - vf[:,0]
+    # loss = np.dot(np.dot(v.T, D), v)
+
+    # print(loss)
+
+    solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, states, next_states, rewards)
     solver.ADMM()
     print solver.theta
     print solver.objs[-1]
@@ -66,19 +102,19 @@ if __name__ == "__main__":
 
     print(loss)
 
-    alg = elastic_td.Elastic_TD(n_samples-1, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, alpha, 0.01, np.array(state_seq), np.array(reward_seq))
-    print(beta)
+    # alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
+    # beta = alg.run(mu, epsilon, alpha, 0.01, np.array(state_seq), np.array(reward_seq))
+    # print(beta)
 
-    # calculate the aproximated value function
-    beta_x = beta[0:3]
-    V_x = np.dot(phi_x, beta_x)
+    # # calculate the aproximated value function
+    # beta_x = beta[0:3]
+    # V_x = np.dot(phi_x, beta_x)
 
-    # generate the stationary distribution
-    D = np.diag(env.get_stationary(policy))
+    # # generate the stationary distribution
+    # D = np.diag(env.get_stationary(policy))
 
-    # calculate the MSE
-    v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
+    # # calculate the MSE
+    # v = V_x - vf[:,0]
+    # loss = np.dot(np.dot(v.T, D), v)
 
-    print(loss)
+    # print(loss)
