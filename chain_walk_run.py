@@ -24,8 +24,8 @@ if __name__ == '__main__':
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from     the environment
     n_noisy = 20
-    n_samples = 1000
-    n_iter = 500 #n_samples / length
+    n_samples = 500
+    n_iter = 250 #n_samples / length
     state_seq = []
     next_state_seq = []
     action_seq = []
@@ -52,6 +52,34 @@ if __name__ == '__main__':
     # stop_ep:  parameter for stopping criteria (ADMM)
     mu = 1
     epsilon = 0.01
+    delta = 0
+    stop_ep = 0.01
+    eta = 0.99
+
+    # running Elastic_TD
+    alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
+    beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
+    #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
+    print(beta)
+
+    # generate feature vectors for all states
+    x = np.arange(length)
+    phi_x = np.c_[np.ones(length), x, x ** 2]
+
+    # calculate the aproximated value function
+    beta_x = beta[0:3]
+    V_x = np.dot(phi_x, beta_x)
+
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
+
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss1 = np.dot(np.dot(v.T, D), v)
+
+    mu = 1
+    epsilon = 0.01
     delta = 1
     stop_ep = 0.01
     eta = 0.99
@@ -76,6 +104,6 @@ if __name__ == '__main__':
 
     # calculate the MSE
     v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
+    loss2 = np.dot(np.dot(v.T, D), v)
 
-    print(loss)
+    print(loss1, loss2)
