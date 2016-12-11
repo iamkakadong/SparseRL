@@ -2,7 +2,7 @@ import numpy as np
 
 class lstd:
 
-    lam = 0.
+    lam = 0. # Used for eligibility traces. For ordinary LSTD, set to 0.0. Larger lambda makes the learning algorithm more like Monte-Carlo methods. lambda in [0, 1]
     dim = 0
     gamma = 0.
 

@@ -14,7 +14,7 @@ if __name__ == "__main__":
     n_samples = 1000
 
     #set parameters for solver
-    lam = 0
+    lam = 0.0
     dim = 3 + n_noisy
     epsilon = 0.01
     mu = 1
