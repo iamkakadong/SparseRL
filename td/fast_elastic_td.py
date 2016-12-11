@@ -124,31 +124,29 @@ class Elastic_TD:
         primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, alpha, self.beta, mu)
         while linalg.norm(primal_residual) > stop_ep or linalg.norm(dual_residual) > stop_ep:
             count += 1
-            prev_alpha_hat = alpha
-            cur_alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta)
-                                        - mu * v, epsilon)
+            prev_alpha_hat = np.copy(alpha)
+            cur_alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
             self.beta = self.prox(self.tau * mu * delta,
-                                    self.beta - self.tau *
-                                    self.grad(tilde_C, tilde_d, self.beta, cur_alpha, mu, delta, v))
+                                    self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
             cur_v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - cur_alpha)
 
             primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, cur_alpha, alpha, self.beta, mu)
 
             # fast admm with restart
-            c = 1.0 * mu * (linalg.norm(primal_residual) ** 2 + linalg.norm(dual_residual) ** 2)
+            c = 1.0 / mu * (linalg.norm(primal_residual) ** 2 + linalg.norm(dual_residual) ** 2)
             if c < eta * prev_c:
                 cur_a = (1.0 + np.sqrt(1.0 + 4.0 * a ** 2)) / 2.0
                 alpha = cur_alpha + (a - 1) / cur_a * (cur_alpha - prev_alpha)
                 v = cur_v + (a - 1) / cur_a * (cur_v - prev_v)
             else:
                 cur_a = 1
-                alpha = prev_alpha
-                v = prev_v
+                alpha = np.copy(prev_alpha)
+                v = np.copy(prev_v)
                 c = 1.0 / eta * prev_c
             a = cur_a
             prev_c = c
-            prev_v = cur_v
-            prev_alpha = cur_alpha
+            prev_v = np.copy(cur_v)
+            prev_alpha = np.copy(cur_alpha)
 
             primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha_hat, self.beta, mu)
             print(self.compute_loss(tilde_A, tilde_b, tilde_G))
