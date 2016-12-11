@@ -54,11 +54,30 @@ if __name__ == '__main__':
     #set parameters for solver
     epsilon = 0.01
     mu = 1
-    alpha = 0.5
+    alpha = 1
     eta = 0.9
 
     solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, state_seq, next_state_seq, reward_seq)
     solver.ADMM()
     print solver.theta
     print solver.objs[-1]
-    print env.compute_mse(policy, solver.theta)
+    loss_1, truth_1, pred_1 = env.compute_mse(policy, solver.theta, 100, 1000)
+
+    alpha = 0.5
+    solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, state_seq, next_state_seq, reward_seq)
+    solver.ADMM()
+    print solver.theta
+    print solver.objs[-1]
+    loss_2, truth_2, pred_2 = env.compute_mse(policy, solver.theta, 100, 1000)
+
+    alpha = 0
+    solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, state_seq, next_state_seq, reward_seq)
+    solver.ADMM()
+    print solver.theta
+    print solver.objs[-1]
+    loss_3, truth_3, pred_3 = env.compute_mse(policy, solver.theta, 100, 1000)
+
+    print loss_1, loss_2, loss_3
+    print truth_1[:10], pred_1[:10], truth_1[-10:], pred_1[-10:]
+    print truth_2[:10], pred_2[:10], truth_2[-10:], pred_2[-10:]
+    print truth_3[:10], pred_3[:10], truth_3[-10:], pred_3[-10:]
