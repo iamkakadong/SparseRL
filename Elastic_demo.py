@@ -3,7 +3,7 @@ from MDP.chain_walk import *
 import MDP.Policy
 import numpy as np
 import td.Elastic as Elastic
-import td.elastic_td as elastic_td
+import td.fast_elastic_td as elastic_td
 import td.Elastic_fast as Elastic_fast
 
 if __name__ == "__main__":
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     rewards = []
 
     n_noisy = 20
-    n_samples = 1000
+    n_samples = 500
     for i in [9,10]:
         # set current state
         env.set_cur_state(i)
@@ -58,27 +58,27 @@ if __name__ == "__main__":
         actions += action_seq
         rewards += reward_seq
 
-    # solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, states, next_states, rewards)
-    # solver.ADMM()
-    # print solver.theta
-    # print solver.objs[-1]
+    #solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, states, next_states, rewards)
+    #solver.ADMM()
+    #print solver.theta
+    #print solver.objs[-1]
 
-    # # generate feature vectors for all states
-    # x = np.arange(length)
-    # phi_x = np.c_[np.ones(length), x, x ** 2]
+    ## generate feature vectors for all states
+    #x = np.arange(length)
+    #phi_x = np.c_[np.ones(length), x, x ** 2]
 
-    # # calculate the aproximated value function
-    # beta_x = solver.theta[0:3]
-    # V_x = np.dot(phi_x, beta_x)
+    ## calculate the aproximated value function
+    #beta_x = solver.theta[0:3]
+    #V_x = np.dot(phi_x, beta_x)
 
-    # # generate the stationary distribution
-    # D = np.diag(env.get_stationary(policy))
+    ## generate the stationary distribution
+    #D = np.diag(env.get_stationary(policy))
 
-    # # calculate the MSE
-    # v = V_x - vf[:,0]
-    # loss = np.dot(np.dot(v.T, D), v)
+    ## calculate the MSE
+    #v = V_x - vf[:,0]
+    #loss = np.dot(np.dot(v.T, D), v)
 
-    # print(loss)
+    #print(loss)
 
     solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, states, next_states, rewards)
     solver.ADMM()
@@ -102,19 +102,19 @@ if __name__ == "__main__":
 
     print(loss)
 
-    # alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    # beta = alg.run(mu, epsilon, alpha, 0.01, np.array(state_seq), np.array(reward_seq))
-    # print(beta)
+    alg = elastic_td.Elastic_TD(2 * n_samples, n_noisy + 3, gamma)
+    beta = alg.run(mu, epsilon, alpha, 0.01, eta, np.array(states), np.array(next_states), np.array(rewards))
+    print(beta)
 
-    # # calculate the aproximated value function
-    # beta_x = beta[0:3]
-    # V_x = np.dot(phi_x, beta_x)
+    # calculate the aproximated value function
+    beta_x = beta[0:3]
+    V_x = np.dot(phi_x, beta_x)
 
-    # # generate the stationary distribution
-    # D = np.diag(env.get_stationary(policy))
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
 
-    # # calculate the MSE
-    # v = V_x - vf[:,0]
-    # loss = np.dot(np.dot(v.T, D), v)
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss = np.dot(np.dot(v.T, D), v)
 
-    # print(loss)
+    print(loss)

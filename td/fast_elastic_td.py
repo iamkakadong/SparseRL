@@ -24,9 +24,9 @@ class Elastic_TD:
     #   tilde_Phi_pirme:  n x k (based on x_prime_1 to x_prime_n)
     #   tilde_R:          n x k (based on r_1 to r_n)
     def calculate_base(self, X, X_prime, R):
-        tilde_Phi = X[0 : self.n]
-        tilde_Phi_prime = X_prime[0 : self.n]
-        tilde_R = R[0 : self.n]
+        tilde_Phi = X
+        tilde_Phi_prime = X_prime
+        tilde_R = R
         return tilde_Phi, tilde_Phi_prime, tilde_R
 
     # generate the model parameters tilde_d, tilde_C, tilde_Pi
@@ -149,8 +149,10 @@ class Elastic_TD:
             prev_alpha = np.copy(cur_alpha)
 
             primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha_hat, self.beta, mu)
-            print(self.compute_loss(tilde_A, tilde_b, tilde_G))
-        print(count)
+
+            if count % 1000 == 0:
+                print 'Iteration:', count, self.compute_loss(tilde_A, tilde_b, tilde_G)
+
         return self.beta
 
     # compute the residual
