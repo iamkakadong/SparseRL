@@ -68,7 +68,6 @@ class Elastic_TD:
         self.b = (1.0 / self.n) * self.Phi.T.dot(self.R)
         self.C = self.gamma * np.dot(self.PI, self.Phi_) - self.Phi
         self.d = np.dot(self.PI, self.R)
-        print self.d[:10]
 
         w, v = np.linalg.eig(self.C.T.dot(self.C) + 2*self.mu*(1-self.alpha)*np.eye(self.k))
         self.t = 0.99 / np.max(w)
@@ -145,10 +144,10 @@ class Elastic_TD:
 
             # calculate objective
             self.objs.append(self.cal_obj())
-            print self.objs[-1]
+            # print self.objs[-1]
             i += 1
             if i % 1000 == 0:
-                print 'Iteration: ', i
+                print 'Iteration: ', i, self.objs[-1]
 
     def proximal_GD(self):
         pass

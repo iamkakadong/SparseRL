@@ -42,17 +42,15 @@ class Elastic_TD:
                 res = np.c_[res, f(states)]
         return res
 
-    def __init__(self, gamma, mu, alpha, eplison, states, rewards):
+    def __init__(self, gamma, mu, alpha, eplison, states, next_states, rewards):
         ''' Compute required variables '''
         self.gamma = gamma
         self.mu = mu
         self.alpha = alpha
         self.eplison = eplison
-        self.n = len(rewards) - 1
-        self.k = len(states[0])
-        self.Phi = np.array(states[: self.n])
-        self.Phi_ = np.array(states[1: self.n+1])
-        self.R = np.array(rewards[1: self.n+1])
+        self.Phi = np.array(states)
+        self.Phi_ = np.array(next_states)
+        self.R = np.array(rewards)
         self.PI = np.dot(
                       np.dot(
                           self.Phi,
@@ -61,6 +59,8 @@ class Elastic_TD:
                           )
                       ),
                       self.Phi.T)
+        self.n = self.Phi.shape[0]
+        self.k = self.Phi.shape[1]
         self.A = (1.0 / self.n) * self.Phi.T.dot(self.Phi - self.gamma * self.Phi_)
         self.M = self.n * np.linalg.pinv(np.dot(self.Phi.T, self.Phi))
         self.b = (1.0 / self.n) * self.Phi.T.dot(self.R)
@@ -81,7 +81,7 @@ class Elastic_TD:
 
     def admm_stop(self, itr, ep_prm, ep_dual):
         res_prm = np.linalg.norm( np.dot(self.C, self.theta) + self.d - self.beta )
-        res_dual = np.linalg.norm( (1.0/self.mu) * self.C.T.dot((-1)*np.eye(self.n)).dot(self.beta - self.prev_beta) )
+        res_dual = np.linalg.norm( -1.0 / self.mu  * self.C.T.dot(self.beta - self.prev_beta) )
         return res_prm <= ep_prm and res_dual <= ep_dual
 
     def soft_thd(self, vec, thred):
@@ -94,7 +94,7 @@ class Elastic_TD:
     def ADMM(self):
         '''run admm solver'''
         i = 0
-        while not self.admm_stop(i, 1e-3, 1e-3):
+        while not self.admm_stop(i, 1e-2, 1e-2):
             # update beta
             self.prev_beta = np.copy(self.beta)
             self.beta = np.dot(self.C, self.theta) + self.d - self.mu * self.z
@@ -112,6 +112,10 @@ class Elastic_TD:
             # calculate objective
             self.objs.append(self.cal_obj())
             i += 1
+            print self.objs[-1]
+            if i % 1000 == 0:
+                print 'Iteration: ', i
+        print i
 
     def proximal_GD(self):
         pass
