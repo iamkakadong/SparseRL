@@ -107,11 +107,15 @@ class Elastic_TD:
     #   delta:              parameter for the l1-norm and l2-norm
     # output:
     #   beta:               learned coefficient
-    def elastic_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep):
+    def elastic_td(self, tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep, eta):
         # initialize parameters
-        v = np.zeros(self.n)
         alpha = np.zeros(self.n)
+        v = np.zeros(self.n)
+        a = 1
+        prev_alpha_hat = np.ones(self.n)
         prev_alpha = np.ones(self.n)
+        prev_v = np.ones(self.n)
+        prev_c = 100
         self.compute_tau(tilde_C, mu, delta)
 
         # admm updates
@@ -120,11 +124,33 @@ class Elastic_TD:
         primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, alpha, self.beta, mu)
         while linalg.norm(primal_residual) > stop_ep or linalg.norm(dual_residual) > stop_ep:
             count += 1
-            prev_alpha = alpha
-            alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
-            self.beta = self.prox(self.tau * mu * delta, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
-            v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
-            primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha, self.beta, mu)
+            prev_alpha_hat = alpha
+            cur_alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta)
+                                        - mu * v, epsilon)
+            self.beta = self.prox(self.tau * mu * delta,
+                                    self.beta - self.tau *
+                                    self.grad(tilde_C, tilde_d, self.beta, cur_alpha, mu, delta, v))
+            cur_v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - cur_alpha)
+
+            primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, cur_alpha, alpha, self.beta, mu)
+
+            # fast admm with restart
+            c = 1.0 * mu * (linalg.norm(primal_residual) ** 2 + linalg.norm(dual_residual) ** 2)
+            if c < eta * prev_c:
+                cur_a = (1.0 + np.sqrt(1.0 + 4.0 * a ** 2)) / 2.0
+                alpha = cur_alpha + (a - 1) / cur_a * (cur_alpha - prev_alpha)
+                v = cur_v + (a - 1) / cur_a * (cur_v - prev_v)
+            else:
+                cur_a = 1
+                alpha = prev_alpha
+                v = prev_v
+                c = 1.0 / eta * prev_c
+            a = cur_a
+            prev_c = c
+            prev_v = cur_v
+            prev_alpha = cur_alpha
+
+            primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha_hat, self.beta, mu)
             print(self.compute_loss(tilde_A, tilde_b, tilde_G))
         print(count)
         return self.beta
@@ -140,10 +166,10 @@ class Elastic_TD:
         v = np.dot(tilde_A, self.beta) - tilde_b
         return np.dot(np.dot(np.transpose(v), self.n * tilde_G), v)
 
-    def run(self, mu, epsilon, delta, stop_ep, X, X_prime, R):
+    def run(self, mu, epsilon, delta, stop_ep, eta, X, X_prime, R):
         tilde_Phi, tilde_Phi_prime, tilde_R = self.calculate_base(X, X_prime, R)
         tilde_d, tilde_C, _, tilde_A, tilde_b, tilde_G = self.calculate_param(tilde_Phi, tilde_Phi_prime, tilde_R)
-        self.beta = self.elastic_td(tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep)
+        self.beta = self.elastic_td(tilde_C, tilde_d, tilde_A, tilde_b, tilde_G, mu, epsilon, delta, stop_ep, eta)
         return self.beta
 
 if __name__=='__main__':

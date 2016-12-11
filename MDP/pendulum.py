@@ -91,7 +91,7 @@ class pendulum(MDP):
     def get_value(self, s, P):
         return s.T * P * s
 
-    def to_faetures(self, state):
+    def to_features(self, state):
         return np.r_[np.array(state) ** 2, 1]
 
     def __init__(self, dim, l, m, sigma=0.01, dt=0.01, gamma=0.95, penalty=0.01, action_penalty=0.0):
@@ -122,4 +122,4 @@ class pendulum(MDP):
         self.Q = Q
 
         self.cur_state = np.zeros(2 * dim)
-        self.DEFAULT_STATE = self.cur_state
+        self.DEFAULT_STATE = np.copy(self.cur_state)
