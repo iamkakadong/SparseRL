@@ -46,6 +46,27 @@ class chain_walk(MDP):
     #     s_next = self.transit(self.cur_state, a)
     #     return (a, r, self.to_features(s_next))
 
+    def compute_mse(self, policy, theta, n_irrel, mc_iter=100, restart=1000):
+        '''
+            Compute MSE = ||V_pi - V_theta||_D^2 of a policy and value          function approximator theta.
+            Use Monte-Carlo method to approximate stationary distribution of    the system.
+            mc_iter: total monte-carlo simulations initiated
+            restart: the length of each monte-carlo chain
+        '''
+        vf = self.get_vf(policy)
+        truth = list()
+        pred = list()
+        i = 0
+        for i in range(mc_iter):
+            self.reset_state()
+            for j in range(restart):
+                s = self.cur_state
+                truth.append(vf[s])
+                pred.append(np.inner(theta, np.r_[self.to_features(s), np.random.randn(n_irrel)]))
+                self.transit(s, policy.get_action(s))
+        mse = np.mean(map(lambda x, y: np.linalg.norm(x - y) ** 2, truth, pred))
+        return mse, truth, pred
+
     def get_vf(self, policy):
         '''
             Compute true value function by solving the system of linear equations defined by the Bellman equation
@@ -77,17 +98,6 @@ class chain_walk(MDP):
             print 'Error! Stationary distribution has negative component'
             return None
         return s_dist
-        # w, v = np.linalg.eig(p.T)
-        # idx = np.where(w == 1)[0]
-        # if len(idx) != 0:
-        #     print 'Eigenvalue error! No eigenvalue = 1'
-        #     return None
-        # else:
-        #     if any(v[:, idx] < 0):
-        #         print 'Error! Stationary distribution has negative components'
-        #         return None
-        #     s_dist = v[:, idx] / np.sum(v[:, idx])
-        #     return s_dist
 
     def to_features(self, state):
         f_s = [1, state, state ** 2]

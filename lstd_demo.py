@@ -26,9 +26,10 @@ if __name__ == "__main__":
     agent = lstd(lam, dim, gamma)
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2]) + 0.5
-    #p_mat[0:10, 0] = 1
-    #p_mat[10::, 1] = 1
+    # p_mat = np.zeros([20, 2]) + 0.5
+    p_mat = np.zeros([20, 2])
+    p_mat[0:10, 0] = 1
+    p_mat[10::, 1] = 1
     policy.set_policy(p_mat)
 
     # Get true value function for the policy
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     state_seq.append(env.get_noisy_state(n_noisy))
     for i in range(n_samples):
         # Each sample is a tuple (action, reward, next state)
-        sample = env.noisy_sample_corr(policy, n_noisy)
+        sample = env.noisy_sample(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
         state_seq.append(sample[2])
@@ -68,22 +69,7 @@ if __name__ == "__main__":
     print solver.objs[-1]
     '''
 
-    # generate feature vectors for all states
-    x = np.arange(length)
-    phi_x = np.c_[np.ones(length), x, x ** 2]
-
-    # calculate the aproximated value function
-    beta_x = theta[0:3]
-    V_x = np.dot(phi_x, beta_x)
-
-    # generate the stationary distribution
-    D = np.diag(env.get_stationary(policy))
-
-    # calculate the MSE
-    v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
-
-    print(loss)
+    mse, truth, pred = env.compute_mse(policy, theta, n_noisy)
 
     '''
     alg = elastic_td.Elastic_TD(n_samples-1, n_noisy + 3, gamma)
