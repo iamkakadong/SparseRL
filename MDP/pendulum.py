@@ -95,6 +95,8 @@ class pendulum(MDP):
         '''
             Compute MSE = ||V_pi - V_theta||_D^2 of a policy and value function approximator theta.
             Use Monte-Carlo method to approximate stationary distribution of the system.
+            mc_iter: total iterations for monte-carlo simulation
+            restart: reset the system to initial state after this many of monte-carlo iterations. Reset is equivalent to starting a new sequence of observations.
         '''
         P, b = self.get_vf(policy)
         truth = list()
