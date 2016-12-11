@@ -89,7 +89,7 @@ class pendulum(MDP):
         return np.array(P), b
 
     def get_value(self, s, P):
-        return s.T * P * s
+        return np.dot(s.T, np.dot(P, s))
 
     def compute_mse(self, policy, theta, mc_iter=100000, restart=1000):
         '''
