@@ -1,7 +1,7 @@
 import MDP.chain_walk as chain_walk
 import MDP.chain_walk_policy as chain_walk_policy
 import numpy as np
-import td.fast_elastic_td as elastic_td
+import td.elastic_td as elastic_td
 import td.sparse_td as sparse_td
 
 if __name__ == '__main__':
@@ -24,8 +24,8 @@ if __name__ == '__main__':
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from     the environment
     n_noisy = 20
-    n_samples = 500
-    n_iter = 250 #n_samples / length
+    n_samples = 1000
+    n_iter = 500 #n_samples / length
     state_seq = []
     next_state_seq = []
     action_seq = []
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
     print(beta)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
     print(beta)

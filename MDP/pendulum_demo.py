@@ -10,8 +10,8 @@ if __name__ == '__main__':
     mass = 1
     sigma = 0.01
     dt = 0.01
-    penalty=0.01
-    action_penalty=0.0
+    penalty = 0.01
+    action_penalty = 0.0
 
     policy_noise = 0.1
 
@@ -35,13 +35,16 @@ if __name__ == '__main__':
     n_noisy = 20
     n_samples = 1000
     state_seq = list()
+    next_state_seq = list()
     action_seq = list()
     reward_seq = list()
-    state_seq.append(env.get_noisy_state(n_noisy))
+    state = env.get_noisy_state(n_noisy)
     for i in range(n_samples):
         # Each sample is a tuple (action, reward, next state)
+        state_seq.append(state)
         sample = env.noisy_sample(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
-        state_seq.append(sample[2])
+        next_state_seq.append(sample[2])
+        state = sample[2]
 
