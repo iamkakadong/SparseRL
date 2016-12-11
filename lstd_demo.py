@@ -45,7 +45,7 @@ if __name__ == "__main__":
     state_seq.append(env.get_noisy_state(n_noisy))
     for i in range(n_samples):
         # Each sample is a tuple (action, reward, next state)
-        sample = env.noisy_sample(policy, n_noisy)
+        sample = env.noisy_sample_corr(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
         state_seq.append(sample[2])
