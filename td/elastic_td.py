@@ -25,7 +25,7 @@ class Elastic_TD:
     #   tilde_R:          n x k (based on r_1 to r_n)
     def calculate_base(self, X, X_prime, R):
         tilde_Phi = X[0 : self.n]
-        tilde_Phi_prime = X[0 : self.n]
+        tilde_Phi_prime = X_prime[0 : self.n]
         tilde_R = R[0 : self.n]
         return tilde_Phi, tilde_Phi_prime, tilde_R
 

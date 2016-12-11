@@ -1,7 +1,7 @@
 import MDP.chain_walk as chain_walk
 import MDP.chain_walk_policy as chain_walk_policy
 import numpy as np
-import td.fast_elastic_td as elastic_td
+import td.elastic_td as elastic_td
 import td.sparse_td as sparse_td
 
 if __name__ == '__main__':
@@ -52,13 +52,13 @@ if __name__ == '__main__':
     # stop_ep:  parameter for stopping criteria (ADMM)
     mu = 1
     epsilon = 0.01
-    delta = 1
+    delta = 0
     stop_ep = 0.01
     eta = 0.99
 
     # running Elastic_TD
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
     #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
     #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
     print(beta)
@@ -76,6 +76,34 @@ if __name__ == '__main__':
 
     # calculate the MSE
     v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
+    loss1 = np.dot(np.dot(v.T, D), v)
 
-    print(loss)
+    mu = 1
+    epsilon = 0.01
+    delta = 1
+    stop_ep = 0.01
+    eta = 0.99
+
+    # running Elastic_TD
+    alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
+    beta = alg.run(mu, epsilon, delta, stop_ep, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    #alg = sparse_td.Sparse_TD(n_samples - 1, n_noisy + 3, gamma)
+    #beta = alg.run(mu, epsilon, np.array(state_seq), np.array(reward_seq))
+    print(beta)
+
+    # generate feature vectors for all states
+    x = np.arange(length)
+    phi_x = np.c_[np.ones(length), x, x ** 2]
+
+    # calculate the aproximated value function
+    beta_x = beta[0:3]
+    V_x = np.dot(phi_x, beta_x)
+
+    # generate the stationary distribution
+    D = np.diag(env.get_stationary(policy))
+
+    # calculate the MSE
+    v = V_x - vf[:,0]
+    loss2 = np.dot(np.dot(v.T, D), v)
+
+    print(loss1, loss2)
