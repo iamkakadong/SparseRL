@@ -50,11 +50,38 @@ if __name__ == '__main__':
         next_state_seq.append(sample[2])
         state = sample[2]
 
-    # run elastic_td
+    # set parameters
+    mu = 1
+    epsilon = 0.01
+    stop_ep = 0.01
+    eta = 0.9
+
+    # run l1
+    delta = 1
     alg = elastic_td.Elastic_TD(n_samples, n_noisy + 2 * dim + 1, gamma)
-    beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
-    print(beta)
+    beta_l1 = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    print beta_l1
 
     # compute MSE
-    loss = env.compute_mse(policy, beta)
-    print loss
+    loss_l1, truth_l1, pred_l1  = env.compute_mse(policy, beta_l1)
+    print loss_l1
+
+    # run elastic net
+    delta = 0.5
+    alg = elastic_td.Elastic_TD(n_samples, n_noisy + 2 * dim + 1, gamma)
+    beta_elas = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    print beta_elas
+
+    # compute MSE
+    loss_elas, truth_elas, pred_elas  = env.compute_mse(policy, beta_elas)
+    print loss_elas
+
+    # run elastic net
+    delta = 0
+    alg = elastic_td.Elastic_TD(n_samples, n_noisy + 2 * dim + 1, gamma)
+    beta_l2 = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
+    print beta_l2
+
+    # compute MSE
+    loss_l2, truth_l2, pred_l2  = env.compute_mse(policy, beta_l2)
+    print loss_l2
