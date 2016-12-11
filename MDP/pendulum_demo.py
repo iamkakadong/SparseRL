@@ -10,7 +10,7 @@ if __name__ == '__main__':
     mass = 1
     sigma = 0.01
     dt = 0.01
-    penalty = 0.01
+    penalty = 0.0
     action_penalty = 0.0
 
     policy_noise = 0.1
