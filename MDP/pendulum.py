@@ -95,6 +95,8 @@ class pendulum(MDP):
         '''
             Compute MSE = ||V_pi - V_theta||_D^2 of a policy and value function approximator theta.
             Use Monte-Carlo method to approximate stationary distribution of the system.
+            mc_iter: total iterations for monte-carlo simulation
+            restart: reset the system to initial state after this many of monte-carlo iterations. Reset is equivalent to starting a new sequence of observations.
         '''
         P, b = self.get_vf(policy)
         truth = list()
@@ -104,7 +106,7 @@ class pendulum(MDP):
             for j in range(restart):
                 s = self.cur_state
                 truth.append(self.get_value(s, P))
-                pred.append(np.inner(theta, s))
+                pred.append(np.inner(theta[0:self.dim * 2 + 1], self.to_features(s)))
                 self.transit(s, policy.get_action(s))
         mse = np.mean(map(lambda x, y: np.linalg.norm(x - y) ** 2, truth, pred))
         return mse
