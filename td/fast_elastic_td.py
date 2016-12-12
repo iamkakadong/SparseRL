@@ -119,7 +119,6 @@ class Elastic_TD:
         self.compute_tau(tilde_C, mu, delta)
 
         # admm updates
-        #for j in range(epoch):
         count = 0
         primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, alpha, self.beta, mu)
         while linalg.norm(primal_residual) > stop_ep or linalg.norm(dual_residual) > stop_ep:
@@ -130,10 +129,8 @@ class Elastic_TD:
                                     self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
             cur_v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - cur_alpha)
 
-            primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, cur_alpha, alpha, self.beta, mu)
-
             # fast admm with restart
-            c = 1.0 / mu * (linalg.norm(primal_residual) ** 2 + linalg.norm(dual_residual) ** 2)
+            c =  mu * linalg.norm(cur_v - v) ** 2 + 1.0 / mu * linalg.norm(cur_alpha - alpha) ** 2
             if c < eta * prev_c:
                 cur_a = (1.0 + np.sqrt(1.0 + 4.0 * a ** 2)) / 2.0
                 alpha = cur_alpha + (a - 1) / cur_a * (cur_alpha - prev_alpha)

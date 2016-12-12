@@ -25,7 +25,7 @@ if __name__ == '__main__':
     vf = env.get_vf(policy)
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from     the environment
-    n_noisy = 500
+    n_noisy = 800
     n_samples = 1000
     n_iter = 500 #n_samples / length
     state_seq = []
