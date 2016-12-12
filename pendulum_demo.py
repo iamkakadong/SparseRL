@@ -11,7 +11,7 @@ if __name__ == '__main__':
     dim = 20
     length = 1
     mass = 1
-    sigma = 0.01
+    sigma = 0.1
     dt = 0.01
     penalty = 0.01
     action_penalty = 0.0
