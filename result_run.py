@@ -29,9 +29,10 @@ if __name__ == '__main__':
     NOISE = [20, 50, 100, 200, 500, 800]
     for n_noisy in NOISE:
         for i in range(10):
-            state_seq = data[(n_noisy, i + 1)][0]
-            next_state_seq = data[(n_noisy, i + 1)][1]
-            reward_seq = data[(n_noisy, i + 1)][2]
+            print n_noisy, i
+            state_seq = data[(n_noisy, i)][0]
+            next_state_seq = data[(n_noisy, i)][1]
+            reward_seq = data[(n_noisy, i)][2]
 
        #     # running lstd
        #     agent = lstd.lstd(0.0, 3 + n_noisy, gamma)
@@ -44,8 +45,8 @@ if __name__ == '__main__':
        #             agent.set_start(state_seq[i])
        #             prev_state = state_seq[i]
        #         else:
-       #             agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
-       #             prev_state = state_seq[i + 1]
+       #             agent.update_V(prev_state, state_seq[i], reward_seq[i])
+       #             prev_state = state_seq[i]
 
        #     state_seq.pop()
        #     theta = agent.get_theta()
@@ -62,7 +63,7 @@ if __name__ == '__main__':
             eta = 0.5
 
             # running elastic
-            delta = 0.01
+            delta = 0
             alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
             beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
             print(beta)
@@ -71,7 +72,7 @@ if __name__ == '__main__':
             mse, truth, pred = env.compute_mse(policy, beta, n_noisy, mc_iter=1000, restart=200)
             print mse
 
-            results[(n_noisy, i + 1)] = [mse, truth, pred, beta]
+            results[(n_noisy, i)] = [mse, truth, pred, beta]
 
     with open('results.pickle', 'wb') as fout:
         pickle.dump(results, fout)
