@@ -27,8 +27,8 @@ if __name__ == "__main__":
     # plt.title('noise = 500', fontsize=15)
     # plt.tick_params(labelsize=15)
 
-    plt.boxplot(mse_all[800], labels=labels)
-    plt.title('noise = 800', fontsize=15)
+    plt.boxplot(mse_all[50], labels=labels)
+    plt.title('noise = 50', fontsize=15)
     plt.tick_params(labelsize=15)
 
     plt.show()
