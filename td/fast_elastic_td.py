@@ -147,7 +147,7 @@ class Elastic_TD:
 
             primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha_hat, self.beta, mu)
 
-            if count % 1000 == 0:
+            if count % 10000 == 0:
                 print 'Iteration:', count, self.compute_loss(tilde_A, tilde_b, tilde_G)
 
         return self.beta

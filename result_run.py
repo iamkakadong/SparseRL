@@ -3,7 +3,6 @@ import MDP.chain_walk_policy as chain_walk_policy
 import numpy as np
 import td.fast_elastic_td as elastic_td
 import pickle
-import td.lstd as lstd
 
 if __name__ == '__main__':
 
@@ -45,8 +44,8 @@ if __name__ == '__main__':
        #             agent.set_start(state_seq[i])
        #             prev_state = state_seq[i]
        #         else:
-       #             agent.update_V(prev_state, state_seq[i], reward_seq[i])
-       #             prev_state = state_seq[i]
+       #             agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
+       #             prev_state = state_seq[i + 1]
 
        #     state_seq.pop()
        #     theta = agent.get_theta()
@@ -72,7 +71,7 @@ if __name__ == '__main__':
             mse, truth, pred = env.compute_mse(policy, beta, n_noisy, mc_iter=1000, restart=200)
             print mse
 
-            results[(n_noisy, i)] = [mse, truth, pred, beta]
+            results[(n_noisy, i)] = [mse, beta]
 
     with open('results.pickle', 'wb') as fout:
         pickle.dump(results, fout)
