@@ -10,7 +10,7 @@ if __name__ == '__main__':
     dim = 20
     length = 1
     mass = 1
-    sigma = 0.01
+    sigma = 1
     dt = 0.01
     penalty = 0.01
     action_penalty = 0.0
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     env.reset_state()
 
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
-    n_noisy = 20
+    n_noisy = 0
     n_samples = 1000
     state_seq = list()
     next_state_seq = list()
@@ -65,6 +65,8 @@ if __name__ == '__main__':
     # compute MSE
     loss_l1, truth_l1, pred_l1  = env.compute_mse(policy, beta_l1)
     print loss_l1
+    print truth_l1[0:10]
+    print pred_l1[0:10]
 
     # run elastic net
     delta = 0.5
@@ -75,6 +77,8 @@ if __name__ == '__main__':
     # compute MSE
     loss_elas, truth_elas, pred_elas  = env.compute_mse(policy, beta_elas)
     print loss_elas
+    print truth_elas[0:10]
+    print pred_elas[0:10]
 
     # run elastic net
     delta = 0
@@ -85,3 +89,5 @@ if __name__ == '__main__':
     # compute MSE
     loss_l2, truth_l2, pred_l2  = env.compute_mse(policy, beta_l2)
     print loss_l2
+    print truth_l2[0:10]
+    print pred_l2[0:10]

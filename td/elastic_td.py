@@ -120,12 +120,13 @@ class Elastic_TD:
         primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, alpha, self.beta, mu)
         while linalg.norm(primal_residual) > stop_ep or linalg.norm(dual_residual) > stop_ep:
             count += 1
-            prev_alpha = alpha
+            prev_alpha = np.copy(alpha)
             alpha = self.solve_proj(tilde_d + np.dot(tilde_C, self.beta) - mu * v, epsilon)
             self.beta = self.prox(self.tau * mu * delta, self.beta - self.tau * self.grad(tilde_C, tilde_d, self.beta, alpha, mu, delta, v))
             v = v - 1.0 / mu * (tilde_d + np.dot(tilde_C, self.beta) - alpha)
             primal_residual, dual_residual = self.compute_residual(tilde_C, tilde_d, alpha, prev_alpha, self.beta, mu)
-            print(self.compute_loss(tilde_A, tilde_b, tilde_G))
+            if count % 1000 == 0:
+                print 'Iteration:', count, self.compute_loss(tilde_A, tilde_b, tilde_G)
         print(count)
         return self.beta
 
