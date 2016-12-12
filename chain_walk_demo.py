@@ -7,7 +7,6 @@ import td.fast_elastic_td as elastic_td
 import td.Elastic_fast as Elastic_fast
 import matplotlib.pyplot as plt
 
-
 if __name__ == "__main__":
     gamma = 0.9
     length = 20
@@ -23,9 +22,9 @@ if __name__ == "__main__":
     policy = chain_walk_policy(length)
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
-    p_mat = np.zeros([20, 2]) + 0.5
-    #p_mat[0:10, 0] = 1
-    #p_mat[10::, 1] = 1
+    p_mat = np.zeros([20, 2])
+    p_mat[0:10, 0] = 1
+    p_mat[10::, 1] = 1
     policy.set_policy(p_mat)
 
     # Get true value function for the policy
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     actions = []
     rewards = []
 
-    n_noisy = 20
+    n_noisy = 100
     n_samples = 1000
     for i in [9,10]:
         # set current state
@@ -49,7 +48,7 @@ if __name__ == "__main__":
 
         #get trajectory samples
         for j in range(n_samples / 2):
-            sample = env.noisy_sample(policy, n_noisy)
+            sample = env.noisy_sample_corr(policy, n_noisy)
             action_seq.append(sample[0])
             reward_seq.append(sample[1])
             state_seq.append(sample[2])
@@ -60,52 +59,17 @@ if __name__ == "__main__":
         actions += action_seq
         rewards += reward_seq
 
-    solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, states, next_states, rewards)
-    solver.ADMM()
-    print solver.theta
-    print solver.objs[-1]
+    solver1 = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, states, next_states, rewards)
+    solver1.ADMM()
+    print solver1.theta
+    print solver1.objs[-1]
 
-    # generate feature vectors for all states
-    x = np.arange(length)
-    phi_x = np.c_[np.ones(length), x, x ** 2]
+    solver2 = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, states, next_states, rewards)
+    solver2.ADMM()
+    print solver2.theta
+    print solver2.objs[-1]
 
-    # calculate the aproximated value function
-    beta_x = solver.theta[0:3]
-    V_x = np.dot(phi_x, beta_x)
-
-    # generate the stationary distribution
-    D = np.diag(env.get_stationary(policy))
-
-    # calculate the MSE
-    v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
-
-    print(loss)
-
-    plt.plot(vf)
-    plt.plot(V_x)
+    plt.plot(solver1.objs, label="fast-ADMM")
+    plt.plot(solver2.objs, label="ADMM")
+    plt.legend()
     plt.show()
-
-    # delta = 1
-    # stop_ep = 0.01
-
-    # running Elastic_TD
-    # alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
-    # beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(states), np.array(next_states), np.array(rewards))
-    # print(beta)
-
-    # # generate feature vectors for all states
-    # x = np.arange(length)
-    # phi_x = np.c_[np.ones(length), x, x ** 2]
-
-    # # calculate the aproximated value function
-    # beta_x = beta[0:3]
-    # V_x = np.dot(phi_x, beta_x)
-
-    # # generate the stationary distribution
-    # D = np.diag(env.get_stationary(policy))
-
-    # # calculate the MSE
-    # v = V_x - vf[:,0]
-    # loss2 = np.dot(np.dot(v.T, D), v)
-    # print loss2

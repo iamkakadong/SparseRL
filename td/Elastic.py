@@ -112,9 +112,9 @@ class Elastic_TD:
             # calculate objective
             self.objs.append(self.cal_obj())
             i += 1
-            print self.objs[-1]
+            # print self.objs[-1]
             if i % 1000 == 0:
-                print 'Iteration: ', i
+                print 'Iteration: ', i, self.objs[-1]
         print i
 
     def proximal_GD(self):
