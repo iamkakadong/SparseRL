@@ -45,5 +45,5 @@ if __name__ == "__main__":
 
             res[(n_noisy, index)] = (mse, solver.theta)
 
-    with open('results/res_L1', 'wb') as handle:
+    with open('results/res_lstd.pickle', 'wb') as handle:
         pickle.dump(res, handle)
