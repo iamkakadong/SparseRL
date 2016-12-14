@@ -53,6 +53,7 @@ if __name__ == "__main__":
         reward_seq.append(sample[1])
         next_state_seq.append(sample[2])
         state = sample[2]
+    state_seq.append(state)
 
     # Learning
     agent = lstd(0.0, 41 + n_noisy, gamma)
