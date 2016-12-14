@@ -62,7 +62,7 @@ if __name__ == '__main__':
             eta = 0.5
 
             # running elastic
-            delta = 0
+            delta = 0.5
             alg = elastic_td.Elastic_TD(n_samples, n_noisy + 3, gamma)
             beta = alg.run(mu, epsilon, delta, stop_ep, eta, np.array(state_seq), np.array(next_state_seq), np.array(reward_seq))
             print(beta)
