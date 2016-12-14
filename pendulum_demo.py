@@ -11,7 +11,7 @@ if __name__ == '__main__':
     dim = 20
     length = 1
     mass = 1
-    sigma = 0.1
+    sigma = 0.01
     dt = 0.01
     penalty = 0.01
     action_penalty = 0.0
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     for i in range(n_samples):
         # Each sample is a tuple (action, reward, next state)
         state_seq.append(state)
-        sample = env.noisy_sample(policy, n_noisy)
+        sample = env.noisy_sample_corr(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
         next_state_seq.append(sample[2])
@@ -61,21 +61,21 @@ if __name__ == '__main__':
     solver.ADMM()
     print solver.theta
     print solver.objs[-1]
-    loss_1, truth_1, pred_1 = env.compute_mse(policy, solver.theta, 100, 1000)
+    loss_1, truth_1, pred_1 = env.compute_mse(policy, solver.theta, n_noisy, mc_iter=1000, restart=200)
 
     alpha = 0.5
     solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, state_seq, next_state_seq, reward_seq)
     solver.ADMM()
     print solver.theta
     print solver.objs[-1]
-    loss_2, truth_2, pred_2 = env.compute_mse(policy, solver.theta, 100, 1000)
+    loss_2, truth_2, pred_2 = env.compute_mse(policy, solver.theta, n_noisy, mc_iter=1000, restart=200)
 
     alpha = 0
     solver = Elastic_fast.Elastic_TD(gamma, mu, alpha, eta, epsilon, state_seq, next_state_seq, reward_seq)
     solver.ADMM()
     print solver.theta
     print solver.objs[-1]
-    loss_3, truth_3, pred_3 = env.compute_mse(policy, solver.theta, 100, 1000)
+    loss_3, truth_3, pred_3 = env.compute_mse(policy, solver.theta, n_noisy, mc_iter=1000, restart=200)
 
     print loss_1, loss_2, loss_3
     print truth_1[:10], pred_1[:10], truth_1[-10:], pred_1[-10:]

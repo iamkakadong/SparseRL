@@ -33,23 +33,23 @@ if __name__ == '__main__':
             next_state_seq = data[(n_noisy, i)][1]
             reward_seq = data[(n_noisy, i)][2]
 
-       #     # running lstd
-       #     agent = lstd.lstd(0.0, 3 + n_noisy, gamma)
+           # running lstd
+           agent = lstd.lstd(0.0, 3 + n_noisy, gamma)
 
-       #     state_seq.append(next_state_seq[-1])
-       #     agent.set_start(state_seq[0])
-       #     prev_state = state_seq[0]
-       #     for i in range(len(reward_seq)):
-       #         if i == 500:
-       #             agent.set_start(state_seq[i])
-       #             prev_state = state_seq[i]
-       #         else:
-       #             agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
-       #             prev_state = state_seq[i + 1]
+           state_seq.append(next_state_seq[-1])
+           agent.set_start(state_seq[0])
+           prev_state = state_seq[0]
+           for i in range(len(reward_seq)):
+               if i == 500:
+                   agent.set_start(state_seq[i])
+                   prev_state = state_seq[i]
+               else:
+                   agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
+                   prev_state = state_seq[i + 1]
 
-       #     state_seq.pop()
-       #     theta = agent.get_theta()
-       #     print theta
+           state_seq.pop()
+           theta = agent.get_theta()
+           print theta
 
             # parameters for Elastic_TD
             # mu:       parameter for augmented Lagrangian
