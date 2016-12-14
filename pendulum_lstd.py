@@ -9,47 +9,53 @@ import td.elastic_td as elastic_td
 from td.lstd import lstd
 
 if __name__ == "__main__":
-    gamma = 0.9
-    length = 20
+    gamma = 0.95
+    dim = 20
+    length = 1
+    mass = 1
+    sigma = 0.01
+    dt = 0.01
+    penalty = 0.01
+    action_penalty = 0.0
 
-    n_noisy = 20
-    n_samples = 1000
+    policy_noise = 0.1
 
-    #set parameters for solver
-    lam = 0.0
-    dim = 41 + n_noisy
-    epsilon = 0.01
-    mu = 1
-    alpha = 1
+    # Define environment and policy
+    env = pendulum(dim, length, mass, sigma, dt, gamma, penalty, action_penalty)
+    policy = pendulum_policy(dim * 2, dim, policy_noise)
 
-    # Define environment, policy, and agent
-    env = pendulum(20, 1, 1, gamma=0.9)
-    policy = pendulum_policy(40, 20, 0.01)
-    agent = lstd(lam, dim, gamma)
+    # Compute optimal policy via dynamic programming
+    theta_p, _, _ = env.get_opt_policy()
 
     # Set policy to optimal policy, i.e. move left if state < 10, move right if state >= 10 (state index start with 0)
-    theta, P, b = env.get_opt_policy()
-    policy.set_policy(theta, 0.1)
+    policy.set_policy(theta_p, policy_noise)
 
     # Get true value function for the policy
-    P, b = env.get_vf(policy)
+    vf = env.get_vf(policy)
 
     # Set current state of environment to 0
     env.reset_state()
 
+    n_noisy = 800
+    n_samples = 1000
+
     # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
     state_seq = list()
+    next_state_seq = list()
     action_seq = list()
     reward_seq = list()
-    state_seq.append(env.get_noisy_state(n_noisy))
+    state = env.get_noisy_state(n_noisy)
     for i in range(n_samples):
         # Each sample is a tuple (action, reward, next state)
-        sample = env.noisy_sample(policy, n_noisy)
+        state_seq.append(state)
+        sample = env.noisy_sample_corr(policy, n_noisy)
         action_seq.append(sample[0])
         reward_seq.append(sample[1])
-        state_seq.append(sample[2])
+        next_state_seq.append(sample[2])
+        state = sample[2]
 
     # Learning
+    agent = lstd(0.0, 41 + n_noisy, gamma)
     agent.set_start(state_seq[0])
     prev_state = state_seq[0]
     for i in range(len(reward_seq)):
@@ -58,47 +64,7 @@ if __name__ == "__main__":
 
     # Examine result
     theta = agent.get_theta()
-    print theta
+    # print theta
 
-    '''
-    solver = Elastic.Elastic_TD(gamma, mu, alpha, epsilon, state_seq, reward_seq)
-    solver.ADMM()
-    print solver.theta
-    print solver.objs[-1]
-    '''
-
-    # generate feature vectors for all states
-    x = np.arange(length)
-    phi_x = np.c_[np.ones(length), x, x ** 2]
-
-    # calculate the aproximated value function
-    beta_x = theta[0:3]
-    V_x = np.dot(phi_x, beta_x)
-
-    # generate the stationary distribution
-    D = np.diag(env.get_stationary(policy))
-
-    # calculate the MSE
-    v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
-
-    print(loss)
-
-    '''
-    alg = elastic_td.Elastic_TD(n_samples-1, n_noisy + 3, gamma)
-    beta = alg.run(mu, epsilon, alpha, 0.01, np.array(state_seq), np.array(reward_seq))
-    print(beta)
-
-    # calculate the aproximated value function
-    beta_x = beta[0:3]
-    V_x = np.dot(phi_x, beta_x)
-
-    # generate the stationary distribution
-    D = np.diag(env.get_stationary(policy))
-
-    # calculate the MSE
-    v = V_x - vf[:,0]
-    loss = np.dot(np.dot(v.T, D), v)
-
-    print(loss)
-    '''
+    mse, truth, pred = env.compute_mse(policy, theta, n_noisy, mc_iter=1000, restart=200)
+    print mse
