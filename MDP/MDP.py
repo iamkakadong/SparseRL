@@ -47,7 +47,7 @@ class MDP:
     def noisy_sample_corr(self, policy, n_irrel):
         sample = self.sample(policy)
         s_next = sample[2]
-        f_irrel = s_next + np.random.randn(len(s_next))
+        f_irrel = s_next + np.random.randn(len(s_next)) * np.abs(s_next) / 100
         if len(f_irrel) < n_irrel:
             f_irrel = np.r_[f_irrel, np.random.randn(n_irrel - len(f_irrel))]
         else:
