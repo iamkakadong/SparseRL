@@ -38,7 +38,7 @@ if __name__ == "__main__":
     #set parameters for solver
     epsilon = 0.01
     mu = 1
-    alpha = 1.0
+    alpha = 0.1
     eta = 0.9
 
     res = {}
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         sets = pickle.load(handle)
 
     num_sets = 10
-    noises = [800]
+    noises = [20, 50, 100, 200, 500, 800]
     for index in range(num_sets):
         for n_noisy in noises:
             print index, n_noisy
@@ -59,5 +59,5 @@ if __name__ == "__main__":
             res[(n_noisy, index)] = (mse, solver.theta)
             print mse
 
-    with open('results/res_a1.pickle', 'wb') as handle:
+    with open('results/pendulum_res_a1e-1.pickle', 'wb') as handle:
         pickle.dump(res, handle)

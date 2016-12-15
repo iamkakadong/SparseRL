@@ -11,7 +11,7 @@ if __name__ == "__main__":
     for n_noise in noises:
         mse_all[n_noise] = []
     for name in names:
-        with open('results/res_'+name+'.pickle', 'rb') as handle:
+        with open('results/pendulum_res_'+name+'.pickle', 'rb') as handle:
             res = pickle.load(handle)
             for n_noise in noises:
                 mse_all[n_noise].append([res[(n_noise, i)][0] for i in range(10)])

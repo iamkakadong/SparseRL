@@ -7,6 +7,7 @@ import numpy as np
 import td.Elastic as Elastic
 import td.elastic_td as elastic_td
 from td.lstd import lstd
+import pickle
 
 if __name__ == "__main__":
     gamma = 0.95
@@ -36,36 +37,31 @@ if __name__ == "__main__":
     # Set current state of environment to 0
     env.reset_state()
 
-    n_noisy = 800
-    n_samples = 1000
+    res = {}
+    with open('samples/samples_pendulum.pickle') as handle:
+        sets = pickle.load(handle)
 
-    # Generate a sequence of 1000 noisy samples with 20 irrelavent features from the environment
-    state_seq = list()
-    next_state_seq = list()
-    action_seq = list()
-    reward_seq = list()
-    state = env.get_noisy_state(n_noisy)
-    for i in range(n_samples):
-        # Each sample is a tuple (action, reward, next state)
-        state_seq.append(state)
-        sample = env.noisy_sample_corr(policy, n_noisy)
-        action_seq.append(sample[0])
-        reward_seq.append(sample[1])
-        next_state_seq.append(sample[2])
-        state = sample[2]
-    state_seq.append(state)
+    num_sets = 10
+    noises = [20, 50, 100, 200, 500, 800]
 
     # Learning
-    agent = lstd(0.0, 41 + n_noisy, gamma)
-    agent.set_start(state_seq[0])
-    prev_state = state_seq[0]
-    for i in range(len(reward_seq)):
-        agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
-        prev_state = state_seq[i + 1]
+    for index in range(num_sets):
+        for n_noisy in noises:
+            state_seq, next_state_seq, reward_seq = sets[(n_noisy, index)]
 
-    # Examine result
-    theta = agent.get_theta()
-    # print theta
+            state_seq.append(next_state_seq[-1])
+            agent = lstd(0.0, 41 + n_noisy, gamma)
+            agent.set_start(state_seq[0])
+            prev_state = state_seq[0]
+            for i in range(len(reward_seq)):
+                agent.update_V(prev_state, state_seq[i + 1], reward_seq[i])
+                prev_state = state_seq[i + 1]
 
-    mse, truth, pred = env.compute_mse(policy, theta, n_noisy, mc_iter=1000, restart=200)
-    print mse
+            theta = agent.get_theta()
+        
+            mse, truth, pred = env.compute_mse(policy, theta, n_noisy, mc_iter=1000, restart=200)
+            res[(n_noisy, index)] = (mse, theta)
+            print index, n_noisy, mse
+
+    with open('results/pendulum_res_lstd.pickle', 'wb') as handle:
+        pickle.dump(res, handle)
